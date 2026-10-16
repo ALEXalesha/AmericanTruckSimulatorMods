@@ -1,0 +1,10 @@
+БЕЗ СНА (только одиночная игра)
+
+- Водитель не устаёт: maximum_driving_time 840 -> 10 000 000 минут.
+Внутри также правки No Fines (общий файл economy_data.sii).
+Порядок: выше No Fines.
+
+NO SLEEP (single player only)
+
+- The driver never gets tired: maximum_driving_time 840 -> 10,000,000 minutes.
+Also contains the economy part of No Fines.

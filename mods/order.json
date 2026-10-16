@@ -1,0 +1,19 @@
+{
+  "top_to_bottom": [
+    "hyper_power",
+    "super_power",
+    "money",
+    "free_services",
+    "no_sleep",
+    "no_fuel",
+    "no_fines",
+    "no_rollover",
+    "no_damage",
+    "more_traffic"
+  ],
+  "replaces": {
+    "hyper_power": [
+      "super_power"
+    ]
+  }
+}

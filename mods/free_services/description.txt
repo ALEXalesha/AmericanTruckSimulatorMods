@@ -1,0 +1,14 @@
+БЕСПЛАТНЫЕ УСЛУГИ (только одиночная игра)
+
+- Топливо почти даром во всех 22 штатах (fuel_price = 0.0001 $: с нулём панель заправки делит на ноль).
+- Вызов помощи / эвакуация в ближайший сервис бесплатно (tow_price_base, tow_price_factor = 0).
+- Экстренная заправка бесплатно, восстановление износа в сервисе (restore) бесплатно.
+- Внутри также экономические правки No Sleep и No Fines (усталость, отказ от груза, повреждение груза, опоздание).
+Порядок: ставить ВЫШЕ No Fines, но НИЖЕ Big Money.
+
+FREE SERVICES (single player only)
+
+- Fuel $0.0001 per litre in all 22 states.
+- Free emergency call / towing to the nearest service, free emergency refuel, free wear restore.
+- Also contains the economy parts of No Sleep and No Fines.
+Order: ABOVE No Fines, BELOW Big Money.

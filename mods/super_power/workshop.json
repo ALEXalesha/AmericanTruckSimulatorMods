@@ -1,0 +1,23 @@
+{
+  "title": "OpenRoad: Super Power",
+  "short": "SUPER POWER",
+  "tag_en": "x3 torque, still drivable",
+  "tag_ru": "момент x3, управляемо",
+  "type_tag": "Physics",
+  "en": [
+    "Strong but drivable power boost for every truck of the game (173 engines, 19 truck models).",
+    "- Engine torque x3, air resistance 3.0 -> 1.5, brakes x2.",
+    "- Top speed is still capped by gearing and the end of the torque curves (about 190 km/h for a typical gearbox, up to about 225 km/h with the longest one). The speed limiter is a game option (Gameplay - Speed limiter).",
+    "- Includes the fuel change of OpenRoad: No Fuel and the physics part of OpenRoad: No Rollover.",
+    "Not compatible with other mods that replace def/vehicle/physics.sii or the engine files of the stock trucks.",
+    "Trucks: in ATS every truck brand comes in its own package (dlc_*.scs), some free with the game, some paid DLCs. The mod contains the engine files of all 19 truck models of the 1.61 game (Freightliner, International, Kenworth, Mack, Peterbilt, Volvo, Western Star). Without a truck DLC its files are simply unused; the game log may show warnings about them."
+  ],
+  "ru": [
+    "Сильная, но управляемая прибавка мощности для всех грузовиков игры (173 двигателя, 19 моделей).",
+    "- Крутящий момент x3, сопротивление воздуха 3.0 -> 1.5, тормоза x2.",
+    "- Скорость по-прежнему ограничена передачами и концом кривой момента (около 190 км/ч у типичной коробки, до 225 км/ч у самой длинной). Ограничитель скорости - опция игры (Геймплей - Ограничитель скорости).",
+    "- Внутри также правка расхода OpenRoad: No Fuel и физика OpenRoad: No Rollover.",
+    "Несовместим с другими модами, заменяющими physics.sii или двигатели стандартных грузовиков.",
+    "Грузовики: в ATS каждая марка лежит в своём пакете (dlc_*.scs), часть бесплатно с игрой, часть - платные DLC. Мод содержит файлы двигателей всех 19 моделей грузовиков версии 1.61 (Freightliner, International, Kenworth, Mack, Peterbilt, Volvo, Western Star). Без DLC грузовика его файлы просто не используются; в логе игры могут быть предупреждения."
+  ]
+}

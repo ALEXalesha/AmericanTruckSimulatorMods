@@ -1,0 +1,13 @@
+БОЛЬШИЕ ДЕНЬГИ (только одиночная игра)
+
+- Оплата рейсов в 10 раз выше: коэффициенты оплаты x10 (revenue_coef_per_km 0.9 -> 9, cargo_market 1.0 -> 10, driver 0.67 -> 6.7 и 0.77 -> 7.7), fixed_revenue 600 -> 6000.
+- Новый профиль начинает с 10 000 000 $ вместо 1500 $.
+- Внутри также экономические правки Free Services, No Sleep и No Fines (бесплатная эвакуация и экстренная заправка, нет усталости, отказ от груза, повреждение груза, опоздание).
+Порядок: ставить САМЫМ ВЕРХНИМ из модов OpenRoad.
+Деньги сразу: «Деньги ATS.bat» из репозитория (меняет сумму в сохранении).
+
+BIG MONEY (single player only)
+
+- Job pay 10x (pay coefficients x10, fixed_revenue x10). A new profile starts with $10,000,000.
+- Also contains the economy parts of Free Services, No Sleep and No Fines.
+Order: put it at the TOP of the OpenRoad mods.

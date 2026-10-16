@@ -1,0 +1,17 @@
+{
+  "title": "OpenRoad: No Fuel",
+  "short": "NO FUEL",
+  "tag_en": "1/10000 fuel use",
+  "tag_ru": "расход 1/10000",
+  "type_tag": "Others",
+  "en": [
+    "- Every engine of the game (173 engines, 19 truck models) uses 1/10000 of the fuel: consumption_coef 0.0001. 33 engines already have their own consumption_coef (0.89-0.94) - the mod changes it there and adds the line to the other 140.",
+    "- Not exactly 0 on purpose: the dashboard computes range and average consumption by dividing, and 0 would give broken values (same reason the fuel price in OpenRoad: Free Services is 0.0001).",
+    "Trucks: in ATS every truck brand comes in its own package (dlc_*.scs), some free with the game, some paid DLCs. The mod contains the engine files of all 19 truck models of the 1.61 game (Freightliner, International, Kenworth, Mack, Peterbilt, Volvo, Western Star). Without a truck DLC its files are simply unused; the game log may show warnings about them."
+  ],
+  "ru": [
+    "- Все двигатели игры (173 двигателя, 19 моделей) тратят 1/10000 топлива: consumption_coef 0.0001. У 33 двигателей уже есть свой consumption_coef (0.89-0.94) - мод меняет его, а остальным 140 добавляет строку.",
+    "- Ровно 0 не ставится специально: приборка считает запас хода и средний расход делением, и с нулём показывала бы мусор (по той же причине цена топлива в OpenRoad: Free Services - 0.0001).",
+    "Грузовики: в ATS каждая марка лежит в своём пакете (dlc_*.scs), часть бесплатно с игрой, часть - платные DLC. Мод содержит файлы двигателей всех 19 моделей грузовиков версии 1.61 (Freightliner, International, Kenworth, Mack, Peterbilt, Volvo, Western Star). Без DLC грузовика его файлы просто не используются; в логе игры могут быть предупреждения."
+  ]
+}

@@ -1,0 +1,281 @@
+"""Checks for the built mods and the tools. Needs the installed game (reads def.scs).
+
+Run:  .venv\\Scripts\\python -m unittest discover -s tests -v
+"""
+
+import glob
+import os
+import re
+import struct
+import sys
+import tempfile
+import unittest
+import zipfile
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+
+import build_mods  # noqa: E402
+from cityhash103 import cityhash64  # noqa: E402
+
+GAME = build_mods.DEFAULT_GAME
+HAVE_GAME = os.path.isfile(os.path.join(GAME, "def.scs"))
+try:
+    import Crypto  # noqa: F401  (pycryptodome: needed only for encrypted ScsC saves)
+    HAVE_CRYPTO = True
+except ImportError:
+    HAVE_CRYPTO = False
+STEAM_SAVES = glob.glob(r"C:\Program Files (x86)\Steam\userdata\*\270880\remote\profiles\*\save\*\game.sii")
+
+_BUILT = {}
+
+
+def built():
+    if not _BUILT:
+        tmp = tempfile.mkdtemp(prefix="atsmods_test_")
+        _BUILT.update(build_mods.build_all(GAME, tmp, verbose=False))
+    return _BUILT
+
+
+def jpeg_size(data):
+    i = 2
+    while i < len(data):
+        if data[i] != 0xFF:
+            raise ValueError("bad JPEG marker")
+        marker = data[i + 1]
+        length = struct.unpack(">H", data[i + 2:i + 4])[0]
+        if marker in (0xC0, 0xC1, 0xC2):
+            h, w = struct.unpack(">HH", data[i + 5:i + 9])
+            return w, h
+        i += 2 + length
+    raise ValueError("no SOF marker")
+
+
+def values(text, key):
+    return [m.group(1) for m in re.finditer(r"^\s*%s\s*:\s*([^#\s]+)" % re.escape(key), text, re.M)]
+
+
+class CityHashTest(unittest.TestCase):
+    def test_known_paths(self):
+        # values taken from version.scs / def.scs entry tables
+        self.assertEqual(cityhash64(""), 11160318154034397263)
+        self.assertEqual(cityhash64("version.sii"), 203568326075060621)
+
+
+@unittest.skipUnless(HAVE_GAME, "game not installed")
+class BuiltModsTest(unittest.TestCase):
+    def test_no_fuel_price_is_zero(self):
+        """Regression: fuel_price 0 made the gas station panel show 'Litres: -nan(ind)' (0/0)."""
+        seen = 0
+        for name, r in built().items():
+            for path, data in r["files"].items():
+                if not path.endswith((".sii", ".sui")):
+                    continue
+                for v in values(data.decode("utf-8"), "fuel_price"):
+                    seen += 1
+                    self.assertGreater(float(v), 0.0, "%s %s fuel_price=%s" % (name, path, v))
+        self.assertGreaterEqual(seen, 22)          # ATS 1.61: 22 states in def/country
+
+    def test_no_consumption_coef_is_zero(self):
+        """Same divide-by-zero risk for the dashboard fuel range/average."""
+        n = 0
+        for name, r in built().items():
+            for path, data in r["files"].items():
+                if path.endswith(".sii"):
+                    for v in values(data.decode("utf-8"), "consumption_coef"):
+                        n += 1
+                        self.assertGreater(float(v), 0.0, "%s %s" % (name, path))
+        self.assertGreater(n, 0)
+
+    def test_packages(self):
+        for name, r in built().items():
+            with zipfile.ZipFile(r["file"]) as z:
+                names = z.namelist()
+                self.assertFalse([n for n in names if n.endswith("/")], "%s has directory entries" % name)
+                man = z.read("manifest.sii").decode("utf-8")
+                self.assertIn('compatible_versions[]: "%s"' % r["version_glob"], man)
+                self.assertIn('display_name: "%s"' % r["spec"]["display_name"], man)
+                self.assertEqual(jpeg_size(z.read("mod_icon.jpg")), (276, 162))
+                z.read("mod_description.txt").decode("utf-8")
+                self.assertTrue(any(n.startswith("def/") for n in names))
+
+    def test_every_patch_lands(self):
+        """Every own log entry's new value is present in the built file."""
+        for name, r in built().items():
+            pkg = r["spec"]["package"]
+            for path, key, old, new, owner in r["log"]:
+                if owner != pkg:
+                    continue
+                text = r["files"][path].decode("utf-8")
+                self.assertIn(new, values(text, key), "%s %s %s" % (name, path, key))
+
+    def test_cascade_shared_files(self):
+        """A shared file in a higher mod carries the changes of every lower mod that touches it."""
+        order = build_mods.load_order()
+        replaces = build_mods.load_replaces()
+        res = built()
+        for i, upper in enumerate(order):
+            for lower in order[i + 1:]:
+                if lower in replaces.get(upper, []):
+                    continue
+                shared = set(res[upper]["files"]) & set(res[lower]["files"])
+                shared = {p for p in shared if p.startswith("def/")}
+                lpkg = res[lower]["spec"]["package"]
+                for p in shared:
+                    self.assertIn("[mod %s" % lpkg, res[upper]["files"][p].decode("utf-8"),
+                                  "%s:%s misses changes of %s" % (upper, p, lower))
+
+    def test_all_engines_covered(self):
+        defs = build_mods.LayeredFs(GAME)
+        engines = build_mods.expand_path(defs, "def/vehicle/truck/*/engine/*.sii", "accessory_engine_data")
+        units = sum(len(re.findall(r"^\s*accessory_engine_data\s*:", defs.read(p).decode("utf-8"), re.M))
+                    for p in engines)
+        sp = built()["super_power"]["files"]
+        got = 0
+        for p in engines:
+            text = sp[p].decode("utf-8")
+            got += len(values(text, "consumption_coef"))
+            orig = values(defs.read(p).decode("utf-8"), "torque")
+            new = values(text, "torque")
+            self.assertEqual(len(orig), len(new))
+            for o, n in zip(orig, new):
+                self.assertAlmostEqual(float(n), float(o) * 3, delta=1.0)
+        self.assertEqual(got, units)
+        self.assertEqual(units, 173)              # ATS 1.61.3 with all truck DLC files
+
+    def test_no_zero_divisors(self):
+        """Values the game divides by (or multiplies into a divisor) must never be 0 or negative."""
+        keys = ["fuel_price", "consumption_coef", "air_resistance", "differential_ratio", "grip_factor",
+                "brake_torque_factor", "torque", "steering_sensitivity_multiplier_minimum"]
+        for name, r in built().items():
+            for path, data in r["files"].items():
+                if not path.endswith((".sii", ".sui")):
+                    continue
+                text = data.decode("utf-8")
+                for k in keys:
+                    for v in values(text, k):
+                        self.assertGreater(float(v), 0.0, "%s %s %s=%s" % (name, path, k, v))
+
+    def test_hyper_power(self):
+        """Hyper Power replaces Super Power: torque x12 of stock (not x36), final drive x0.35."""
+        defs = build_mods.LayeredFs(GAME)
+        hp = built()["hyper_power"]["files"]
+        engines = build_mods.expand_path(defs, "def/vehicle/truck/*/engine/*.sii", "accessory_engine_data")
+        trans = build_mods.expand_path(defs, "def/vehicle/truck/*/transmission/*.sii", "accessory_transmission_data")
+        self.assertEqual(len(trans), len([p for p in hp if "/transmission/" in p]))
+        for p in engines:
+            for o, n in zip(values(defs.read(p).decode("utf-8"), "torque"), values(hp[p].decode("utf-8"), "torque")):
+                self.assertAlmostEqual(float(n), float(o) * 12, delta=1.0, msg=p)
+            self.assertNotIn("alexey_super_power", hp[p].decode("utf-8"))
+            self.assertIn("consumption_coef", hp[p].decode("utf-8"))
+        for p in trans:
+            o = values(defs.read(p).decode("utf-8"), "differential_ratio")
+            n = values(hp[p].decode("utf-8"), "differential_ratio")
+            self.assertEqual(len(o), len(n))
+            for a, b in zip(o, n):
+                self.assertAlmostEqual(float(b), float(a) * 0.35, delta=0.001, msg=p)
+        phys = hp["def/vehicle/physics.sii"].decode("utf-8")
+        self.assertEqual(values(phys, "air_resistance"), ["0.1"])
+        self.assertEqual(values(phys, "sway_bar_stiffness_factor"), ["3.0"])   # from No Rollover
+        tires = [p for p in hp if "/f_tire/" in p or "/r_tire/" in p]
+        self.assertEqual(len(tires), 24)          # ATS 1.61: 8 front + 16 rear tyre files
+
+    def test_split_no_sleep_and_no_fuel(self):
+        """v1.1.0: the combined No Sleep & No Fuel is two mods; 10 mods in total."""
+        order = build_mods.load_order()
+        self.assertEqual(len(order), 10)
+        self.assertIn("no_sleep", order)
+        self.assertIn("no_fuel", order)
+        self.assertNotIn("no_sleep_fuel", order)
+        res = built()
+        sleep_files = {p for p in res["no_sleep"]["files"] if p.startswith("def/")}
+        fuel_files = {p for p in res["no_fuel"]["files"] if p.startswith("def/")}
+        self.assertEqual(sleep_files, {"def/economy_data.sii"})
+        self.assertTrue(fuel_files)
+        self.assertTrue(all("/engine/" in p for p in fuel_files))
+        self.assertFalse(sleep_files & fuel_files)             # the two never overwrite each other
+        econ = res["no_sleep"]["files"]["def/economy_data.sii"].decode("utf-8")
+        self.assertEqual(values(econ, "maximum_driving_time"), ["10000000"])
+        self.assertIn("[mod alexey_no_fines", econ)            # chain: carries No Fines below it
+        for p in fuel_files:
+            self.assertEqual(len(values(res["no_fuel"]["files"][p].decode("utf-8"), "consumption_coef")),
+                             len(re.findall(r"^\s*accessory_engine_data\s*:",
+                                            res["no_fuel"]["files"][p].decode("utf-8"), re.M)))
+
+    def test_each_own_patch_in_exactly_one_mod(self):
+        """A parameter is changed by exactly one mod (the others only carry it through the chain)."""
+        owners = {}
+        for name in build_mods.load_order():
+            for pattern, ops in build_mods.load_spec(name)["patches"].items():
+                for op in ops:
+                    key = op.get("key") or op.get("line", "").split(":")[0].strip()
+                    owners.setdefault((pattern, key), set()).add(name)
+        shared = {k: v for k, v in owners.items() if len(v) > 1}
+        # Hyper Power and Super Power are alternatives (order.json "replaces") and both scale torque
+        allowed = {k for k, v in shared.items() if v == {"hyper_power", "super_power"}}
+        self.assertEqual(set(shared) - allowed, set(), shared)
+
+    def test_chain_carries_the_split_mods(self):
+        res = built()
+        for upper in ("money", "free_services"):
+            econ = res[upper]["files"]["def/economy_data.sii"].decode("utf-8")
+            self.assertIn("[mod alexey_no_sleep:", econ, upper)
+            self.assertEqual(values(econ, "maximum_driving_time"), ["10000000"], upper)
+        for upper in ("hyper_power", "super_power"):
+            engines = [p for p in res[upper]["files"] if "/engine/" in p]
+            self.assertTrue(engines)
+            for p in engines:
+                self.assertIn("[mod alexey_no_fuel", res[upper]["files"][p].decode("utf-8"), p)
+
+    def test_values_that_matter(self):
+        res = built()
+        econ = res["money"]["files"]["def/economy_data.sii"].decode("utf-8")
+        # x10 pay: the coefficients the job price uses (tests/test_pay_law.py); revenue_per_km_base
+        # is not a pay factor in 1.61 and stays vanilla
+        self.assertEqual(values(econ, "revenue_per_km_base"), ["15"])
+        self.assertEqual(values(econ, "revenue_coef_per_km"), ["9"])
+        self.assertEqual(values(econ, "cargo_market_revenue_coef_per_km"), ["10"])
+        self.assertEqual(values(econ, "driver_revenue_coef_per_km"), ["6.7"])
+        self.assertEqual(values(econ, "driver_cargo_market_revenue_coef_per_km"), ["7.7"])   # ATS stock 0.77
+        self.assertEqual(values(econ, "fixed_revenue"), ["6000"])
+        self.assertEqual(values(econ, "maximum_driving_time"), ["10000000"])
+        self.assertEqual(values(econ, "tow_price_base"), ["0"])
+        dmg = res["no_damage"]["files"]["def/damage_data.sii"].decode("utf-8")
+        self.assertEqual(values(dmg, "truck_damage_coef"), ["0.0"])
+        phys = res["super_power"]["files"]["def/vehicle/physics.sii"].decode("utf-8")
+        self.assertEqual(values(phys, "sway_bar_stiffness_factor"), ["3.0"])
+        self.assertEqual(values(phys, "air_resistance"), ["1.5"])
+
+
+class SaveToolsTest(unittest.TestCase):
+    TEXT = ("SiiNunit\n{\neconomy : _nameless.1 {\n bank: _nameless.2\n experience_points: 44339\n adr: 63\n"
+            " long_dist: 6\n heavy: 2\n fragile: 0\n urgent: 0\n mechanical: 6\n}\n\n"
+            "bank : _nameless.2 {\n money_account: 73117\n coinsurance_fixed: 0\n}\n}\n")
+
+    # save_profile.py (level and skills) of the ETS2 project is not part of the ATS version:
+    # it was never checked on an ATS save.
+
+    def test_money_regex_text(self):
+        import save_money
+        m = save_money.TEXT_BANK.search(self.TEXT)
+        self.assertEqual(m.group(2), "73117")
+
+    @unittest.skipUnless(STEAM_SAVES, "no saves on this PC")
+    def test_real_saves_parse(self):
+        import save_money
+        checked = 0
+        for g in STEAM_SAVES[:5]:
+            with open(g, "rb") as fh:
+                encrypted = fh.read(4) == b"ScsC"
+            if encrypted and not HAVE_CRYPTO:
+                continue            # pip install -r tools/requirements.txt (pycryptodome)
+            checked += 1
+            kind, _raw, money, _w = save_money.read_money(g)
+            self.assertIn(kind, ("binary", "text"))
+            self.assertIsInstance(money, int)
+        if not checked:
+            self.skipTest("only encrypted saves here and pycryptodome is not installed")
+
+
+if __name__ == "__main__":
+    unittest.main()

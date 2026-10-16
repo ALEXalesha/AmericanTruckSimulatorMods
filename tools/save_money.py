@@ -1,0 +1,426 @@
+"""Show or change the money in an ATS save (game.sii) - the game must be closed.
+
+  python tools/save_money.py                      list profiles, saves and money
+  python tools/save_money.py --save latest --set 5000000000            dry run (writes NOTHING)
+  python tools/save_money.py --save latest --set 5000000000 --apply    write
+  python tools/save_money.py --save autosave --set-usd 50000000 --apply
+  python tools/save_money.py --save autosave --restore                 put the last backup back
+
+Currency: the save keeps money in US dollars; the game shows it in the currency
+chosen in the profile (Options - Gameplay - Currency; the profile's config.cfg,
+uset g_currency "N": 0 USD, 1 CAD, 2 MXN, 3 EUR in 1.61). --set takes the amount
+AS THE GAME SHOWS IT, in that currency, and converts it with the game's rate
+(def/economy_data.sii, currency_ratio). With Mexican pesos (rate 17.156)
+--set 1000000000 writes 58,288,645 USD to the file and the game shows
+1,000,000,000 MXN (rounded to whole dollars). --set-usd writes a USD amount as is.
+--currency CODE (USD, CAD, MXN, EUR) overrides the profile's currency. Every
+readout shows both: USD in the file and the amount on screen.
+
+--save latest picks the newest save of the profile (the one the game's
+"Continue" loads). Without --apply nothing is written.
+
+The simplest way on Windows: double-click money.bat (or "Деньги ATS.bat") in
+the repository root - it asks for the amount and writes it (tools/money_menu.py).
+
+Steam Cloud: a profile under Steam\\userdata\\<id>\\270880\\remote is synced by
+Steam. At the next game launch Steam compares the file with its cache (SHA),
+sees the local change and uploads it ("SHA mismatch with cache - setting local
+changes" in Steam\\logs\\cloud_log.txt). Only if the cloud copy changed too
+(another PC) does Steam show a conflict window: then pick the local files.
+
+Before writing, the whole save folder is copied to
+  Documents\\American Truck Simulator\\save_backups\\<profile>\\<save>_<time>\\
+
+Formats (see sii_save.py):
+  - text save (g_save_format "2"): money_account is replaced in the bank unit;
+  - encrypted binary save (ScsC + BSII, the default): decrypted, the 8 bytes of
+    bank.money_account are replaced and the file is written as plain BSII,
+    the same binary format without the encryption layer.
+Needs pycryptodome for encrypted saves (installed in the project venv).
+"""
+
+import argparse
+import datetime
+import glob
+import os
+import re
+import shutil
+import struct
+import subprocess
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from sii_save import Bsii, SiiError, load_plain  # noqa: E402
+
+DOCS = os.path.join(os.path.expanduser("~"), "Documents", "American Truck Simulator")
+STEAM_USERDATA = r"C:\Program Files (x86)\Steam\userdata"
+BACKUP_ROOT = os.path.join(DOCS, "save_backups")
+GAME_DIR = r"C:\Program Files (x86)\Steam\steamapps\common\American Truck Simulator"
+INT64_MAX = 2 ** 63 - 1
+
+# def/economy_data.sii of ATS 1.61, used when the game files cannot be read.
+# The order matters: g_currency is an index into this list.
+BUILTIN_CURRENCIES = [
+    {"code": c, "ratio": r, "sign2": "", "sign3": ""} for c, r in (
+        ("USD", 1.0), ("CAD", 1.3909), ("MXN", 17.156), ("EUR", 0.8667))
+]
+
+
+def parse_currencies(text):
+    """The currency list of economy_data.sii, in file order."""
+    codes = re.findall(r'^\s*currency_code\[\]\s*:\s*"([^"]*)"', text, re.M)
+    ratios = re.findall(r'^\s*currency_ratio\[\]\s*:\s*([-\d.]+)', text, re.M)
+    sign2 = re.findall(r'^\s*currency_sign2\[\]\s*:\s*"([^"]*)"', text, re.M)
+    sign3 = re.findall(r'^\s*currency_sign3\[\]\s*:\s*"([^"]*)"', text, re.M)
+    if not codes or len(codes) != len(ratios):
+        raise SiiError("currency list: %d codes, %d ratios" % (len(codes), len(ratios)))
+    return [{"code": c, "ratio": float(r), "sign2": sign2[i] if i < len(sign2) else "",
+             "sign3": sign3[i] if i < len(sign3) else ""} for i, (c, r) in enumerate(zip(codes, ratios))]
+
+
+def game_currencies(game_dir=GAME_DIR):
+    """The currency list from the installed game, or the built-in 1.61 list."""
+    try:
+        from hashfs import HashFs
+        text = HashFs(os.path.join(game_dir, "def.scs")).read("def/economy_data.sii").decode("utf-8-sig")
+        return parse_currencies(text)
+    except Exception:  # no game here or another layout: the 1.61 list
+        return BUILTIN_CURRENCIES
+
+
+def profile_currency_index(profile_dir):
+    """g_currency from the profile's config.cfg (0 = USD when it is not there)."""
+    try:
+        with open(os.path.join(profile_dir, "config.cfg"), encoding="utf-8", errors="replace") as fh:
+            m = re.search(r'^\s*uset\s+g_currency\s+"?(\d+)"?', fh.read(), re.M)
+    except OSError:
+        return 0
+    return int(m.group(1)) if m else 0
+
+
+def pick_currency(profile_dir, code=None):
+    table = game_currencies()
+    if code:
+        for c in table:
+            if c["code"].rstrip("*").upper() == code.rstrip("*").upper():
+                return c
+        raise SystemExit("unknown currency %s; known: %s" % (code, ", ".join(c["code"] for c in table)))
+    i = profile_currency_index(profile_dir)
+    return table[i] if 0 <= i < len(table) else table[0]
+
+
+def to_screen(usd, cur):
+    return int(round(usd * cur["ratio"]))
+
+
+def from_screen(amount, cur):
+    return int(round(amount / cur["ratio"]))
+
+
+def fmt(amount, code):
+    return "%s %s" % (format(amount, ","), code.rstrip("*"))
+
+
+def both(usd, cur):
+    """'50,000,000 USD in the file = 857,800,000 MXN on screen (rate 17.156)'"""
+    if cur["code"] == "USD":
+        return "%s in the file = on screen" % fmt(usd, "USD")
+    return "%s in the file = %s on screen (rate %s)" % (
+        fmt(usd, "USD"), fmt(to_screen(usd, cur), cur["code"]), format(cur["ratio"], "g"))
+
+
+def profile_dirs():
+    out = []
+    for pat in (os.path.join(DOCS, "profiles", "*"),
+                os.path.join(DOCS, "steam_profiles", "*"),
+                os.path.join(STEAM_USERDATA, "*", "270880", "remote", "profiles", "*")):
+        for d in glob.glob(pat):
+            if os.path.isdir(os.path.join(d, "save")):
+                out.append(d)
+    return out
+
+
+def profile_name(d):
+    h = os.path.basename(d)
+    try:
+        return bytes.fromhex(h).decode("utf-8")
+    except ValueError:
+        return h
+
+
+def game_running():
+    try:
+        r = subprocess.run(["tasklist", "/FI", "IMAGENAME eq amtrucks.exe", "/NH"],
+                           capture_output=True, text=True, errors="replace")
+        return "amtrucks.exe" in r.stdout.lower()
+    except OSError:
+        return False
+
+
+def in_steam_cloud(profile_dir):
+    """True for a profile Steam syncs (Steam\\userdata\\<id>\\270880\\remote\\profiles\\...)."""
+    parts = [x.lower() for x in os.path.normpath(os.path.abspath(profile_dir)).split(os.sep)]
+    return "userdata" in parts and "remote" in parts and "270880" in parts
+
+
+def saves_newest_first(profile_dir):
+    """Save folders that hold a game.sii, newest first (the game's "Continue" loads the first)."""
+    games = glob.glob(os.path.join(profile_dir, "save", "*", "game.sii"))
+    return [os.path.dirname(g) for g in sorted(games, key=os.path.getmtime, reverse=True)]
+
+
+def latest_save(profile_dir):
+    saves = saves_newest_first(profile_dir)
+    return os.path.basename(saves[0]) if saves else None
+
+
+TEXT_BANK = re.compile(r"(^bank\s*:\s*[^\s{]+\s*\{.*?^\s*money_account\s*:\s*)(-?\d+)", re.M | re.S)
+
+
+def read_money(path):
+    with open(path, "rb") as fh:
+        raw = load_plain(fh.read())
+    if raw[:4] == b"BSII":
+        b = Bsii(raw)
+        banks = b.find("bank")
+        if len(banks) != 1:
+            raise SiiError("expected one bank unit, found %d" % len(banks))
+        t, off = banks[0][2]["money_account"]
+        if t != 0x31:
+            raise SiiError("money_account has unexpected type 0x%02X" % t)
+        return "binary", raw, struct.unpack_from("<q", raw, off)[0], off
+    text = raw.decode("utf-8")
+    ms = list(TEXT_BANK.finditer(text))
+    if len(ms) != 1:
+        raise SiiError("expected one bank unit with money_account in text save, found %d" % len(ms))
+    return "text", raw, int(ms[0].group(2)), ms[0]
+
+
+INFO_MONEY = re.compile(r"(^\s*info_money_account\s*:\s*)(-?\d+)", re.M)
+
+
+def info_patched(path, usd):
+    """info.sii bytes with info_money_account = usd, or None when the file has no such
+    field or cannot be read (the money in game.sii is what counts; info.sii is only the
+    Load screen). Written as plain text / BSII, like game.sii."""
+    try:
+        with open(path, "rb") as fh:
+            raw = load_plain(fh.read())
+        if raw[:4] == b"BSII":
+            units = Bsii(raw).find("save_container")
+            if len(units) != 1 or "info_money_account" not in units[0][2]:
+                return None
+            t, off = units[0][2]["info_money_account"]
+            fmt_ = {0x31: "<q", 0x33: "<Q", 0x25: "<i", 0x27: "<I"}.get(t)
+            if fmt_ is None:
+                return None
+            new = bytearray(raw)
+            struct.pack_into(fmt_, new, off, usd)
+            new = bytes(new)
+            _t, off2 = Bsii(new).find("save_container")[0][2]["info_money_account"]
+            return new if struct.unpack_from(fmt_, new, off2)[0] == usd else None
+        text = raw.decode("utf-8")
+        ms = list(INFO_MONEY.finditer(text))
+        if len(ms) != 1:
+            return None
+        return (text[:ms[0].start(2)] + str(usd) + text[ms[0].end(2):]).encode("utf-8")
+    except (SiiError, OSError, UnicodeDecodeError, struct.error):
+        return None
+
+
+BACKUP_NAME = r"_(\d{8}-\d{6})(?:_(\d+))?"     # <save>_<YYYYmmdd-HHMMSS>[_<n>]
+
+
+def backup(save_dir, prof, root=BACKUP_ROOT):
+    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    dst = os.path.join(root, os.path.basename(prof), "%s_%s" % (os.path.basename(save_dir), stamp))
+    n = 1
+    base = dst
+    while os.path.exists(dst):          # a second write within the same second
+        n += 1
+        dst = "%s_%d" % (base, n)
+    shutil.copytree(save_dir, dst)
+    return dst
+
+
+def backups_of(save, prof, root=BACKUP_ROOT):
+    """Backup folders of exactly this save, oldest first. The game's saves are called
+    autosave, autosave_job, autosave_job_3, autosave_drive_5, ...: a plain "autosave_*"
+    would also match the backups of autosave_job_3 and autosave_drive."""
+    rx = re.compile(re.escape(save) + BACKUP_NAME + "$")
+    found = []
+    for d in glob.glob(os.path.join(root, os.path.basename(prof), glob.escape(save) + "_*")):
+        m = rx.match(os.path.basename(d))
+        if m and os.path.isdir(d):
+            found.append((m.group(1), int(m.group(2) or 1), d))
+    return [d for _s, _n, d in sorted(found)]
+
+
+def patched(raw, kind, where, usd):
+    """The save bytes with money_account = usd, checked by reading them back."""
+    if not 0 <= usd <= INT64_MAX:
+        raise SiiError("money must be between 0 and %s USD" % format(INT64_MAX, ","))
+    if kind == "binary":
+        new = bytearray(raw)
+        struct.pack_into("<q", new, where, usd)
+        new = bytes(new)
+    else:
+        text = raw.decode("utf-8")
+        new = (text[:where.start(2)] + str(usd) + text[where.end(2):]).encode("utf-8")
+    if new[:4] == b"BSII":
+        b = Bsii(new)
+        t, off = b.find("bank")[0][2]["money_account"]
+        got = struct.unpack_from("<q", new, off)[0]
+    else:
+        got = int(TEXT_BANK.search(new.decode("utf-8")).group(2))
+    if got != usd:
+        raise SiiError("internal check: patched save reads %s, expected %s" % (got, usd))
+    return new
+
+
+def write_money(profile_dir, save, usd, backup_dir=BACKUP_ROOT):
+    """Back up the save folder, write usd into its game.sii, read it back.
+
+    info.sii of the save gets the same amount (info_money_account: what the game's Load
+    screen shows; the game itself keeps it equal to the bank's money).
+    Returns (money before, money after, backup folder). The caller checks that the
+    game is closed. The file gets a fresh modified time; Steam Cloud compares the
+    SHA with its cache anyway and uploads the changed file at the next launch.
+    """
+    save_dir = os.path.join(profile_dir, "save", save)
+    game = os.path.join(save_dir, "game.sii")
+    kind, raw, before, where = read_money(game)
+    new = patched(raw, kind, where, usd)
+    info = os.path.join(save_dir, "info.sii")
+    new_info = info_patched(info, usd) if os.path.isfile(info) else None
+    dst = backup(save_dir, profile_dir, backup_dir)
+    with open(game, "wb") as fh:
+        fh.write(new)
+    if new_info is not None:
+        with open(info, "wb") as fh:
+            fh.write(new_info)
+    _k, _r, after, _w = read_money(game)
+    if after != usd:
+        raise SiiError("read back %s, expected %s - put the backup back with --restore (%s)" % (after, usd, dst))
+    return before, after, dst
+
+
+BAR = "=" * 72
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--profile", help="profile folder name (hex) or display name; default: the only/first one")
+    ap.add_argument("--profile-dir", help="path of one profile folder (the one with save inside)")
+    ap.add_argument("--save", help="save folder name (autosave, 1, quicksave, ...) or latest")
+    ap.add_argument("--set", type=int, help="new money AS THE GAME SHOWS IT, in the profile's currency")
+    ap.add_argument("--set-usd", type=int, help="new money in USD, as stored in the save")
+    ap.add_argument("--currency", help="currency code (USD, RUB, ...) instead of the profile's")
+    ap.add_argument("--apply", action="store_true", help="really write (otherwise dry run)")
+    ap.add_argument("--restore", action="store_true", help="copy the newest backup of --save back")
+    ap.add_argument("--backup-dir", default=BACKUP_ROOT, help="where backups go (default: %(default)s)")
+    a = ap.parse_args()
+    if a.set is not None and a.set_usd is not None:
+        raise SystemExit("use --set or --set-usd, not both")
+
+    profs = [a.profile_dir] if a.profile_dir else profile_dirs()
+    if a.profile:
+        profs = [p for p in profs if a.profile in (os.path.basename(p), profile_name(p))]
+    if not profs:
+        raise SystemExit("no profile with saves found")
+
+    if not a.save:
+        for p in profs:
+            cur = pick_currency(p, a.currency)
+            print("profile %s  (%s), currency on screen: %s" % (profile_name(p), p, cur["code"].rstrip("*")))
+            saves = sorted(glob.glob(os.path.join(p, "save", "*", "game.sii")),
+                           key=os.path.getmtime, reverse=True)
+            for g in saves[:12]:
+                when = datetime.datetime.fromtimestamp(os.path.getmtime(g)).strftime("%Y-%m-%d %H:%M")
+                try:
+                    kind, _, money, _ = read_money(g)
+                    info = "%s, money %s" % (kind, both(money, cur))
+                except Exception as e:  # report and keep listing
+                    info = "unreadable: %s" % e
+                print("  %-18s %s  %s" % (os.path.basename(os.path.dirname(g)), when, info))
+        return 0
+
+    prof = profs[0]
+    if a.save == "latest":
+        a.save = latest_save(prof)
+        if not a.save:
+            raise SystemExit("no save with game.sii in " + prof)
+        print("latest save: %s" % a.save)
+    save_dir = os.path.join(prof, "save", a.save)
+    game = os.path.join(save_dir, "game.sii")
+    if not os.path.isfile(game) and not a.restore:
+        raise SystemExit("not found: " + game)
+
+    if a.restore:
+        cands = backups_of(a.save, prof, a.backup_dir)
+        if not cands:
+            raise SystemExit("no backup found: " + os.path.join(
+                a.backup_dir, os.path.basename(prof), a.save + "_<time>"))
+        if game_running():
+            raise SystemExit("ATS is running - close the game first")
+        src = cands[-1]
+        for f in os.listdir(src):
+            shutil.copy2(os.path.join(src, f), os.path.join(save_dir, f))
+        print("restored", save_dir, "from", src)
+        return 0
+
+    kind, raw, money, where = read_money(game)
+    cur = pick_currency(prof, a.currency)
+    print("profile %s, save %s: %s save, money %s" % (profile_name(prof), a.save, kind, both(money, cur)))
+    if a.set is None and a.set_usd is None:
+        return 0
+    if a.set_usd is not None:
+        usd = a.set_usd
+    else:
+        usd = from_screen(a.set, cur)
+        print("--set %s (the game shows %s): the file gets %s" % (
+            fmt(a.set, cur["code"]), cur["code"].rstrip("*"), fmt(usd, "USD")))
+        if to_screen(usd, cur) != a.set:
+            print("  the save holds whole dollars, so the game will show %s" % fmt(to_screen(usd, cur), cur["code"]))
+    if not 0 <= usd <= INT64_MAX:
+        raise SystemExit("money must be between 0 and %s USD" % format(INT64_MAX, ","))
+    patched(raw, kind, where, usd)          # checks the change before anything is touched
+    if not a.apply:
+        print(BAR)
+        print("  NOTHING WRITTEN (dry run). To write, add --apply:")
+        print("  would write: %s" % both(usd, cur))
+        print("  НИЧЕГО НЕ ЗАПИСАНО - добавьте --apply")
+        print(BAR)
+        return 0
+    if game_running():
+        raise SystemExit("ATS is running - close the game first, otherwise it overwrites the save")
+    before, after, dst = write_money(prof, a.save, usd, a.backup_dir)
+    print("backup:", dst)
+    print(BAR)
+    print("  WRITTEN: %s" % both(after, cur))
+    print("  was:     %s" % both(before, cur))
+    if a.save == latest_save(prof):
+        print("  Now start the game and load the latest save (%s)." % a.save)
+        print("  ЗАПИСАНО. Теперь запустите игру и загрузите последнее сохранение.")
+    else:
+        print("  Now start the game and load the save %s (Load game)." % a.save)
+        print("  ЗАПИСАНО. Теперь запустите игру и загрузите сохранение %s." % a.save)
+    print(BAR)
+    print("file:", game)
+    if in_steam_cloud(prof):
+        print("Steam Cloud profile: Steam uploads the changed file at the next game launch. If it shows a")
+        print("cloud conflict window, choose the files on THIS computer (local), not the cloud.")
+    return 0
+
+
+if __name__ == "__main__":
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="replace")    # a console code page without a sign must not crash
+        except (AttributeError, ValueError):
+            pass
+    try:
+        sys.exit(main())
+    except SiiError as e:
+        print("ERROR:", e)
+        sys.exit(2)

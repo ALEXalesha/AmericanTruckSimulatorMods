@@ -1,0 +1,8 @@
+БЕЗ ПОВРЕЖДЕНИЙ (только одиночная игра)
+
+- Нет урона от столкновений, нет износа двигателя, коробки и колёс, груз не повреждается.
+Старые повреждения остаются до первого ремонта.
+
+NO DAMAGE (single player only)
+
+- No collision damage, no wear, no cargo damage. Old damage stays until repaired once.

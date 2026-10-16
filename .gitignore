@@ -1,0 +1,8 @@
+.venv/
+extracted/
+build/
+__pycache__/
+*.pyc
+workshop/
+release/
+.ci-venv/

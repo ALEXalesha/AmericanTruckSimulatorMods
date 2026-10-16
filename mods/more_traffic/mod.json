@@ -1,0 +1,29 @@
+{
+  "package": "alexey_more_traffic",
+  "file": "alexey_more_traffic.scs",
+  "display_name": "More Traffic (Alexey)",
+  "category": "ai_traffic",
+  "version": "1.0.0",
+  "icon": {
+    "title": "MORE TRAFFIC",
+    "subtitle": "БОЛЬШЕ МАШИН",
+    "bg": [
+      20,
+      70,
+      140
+    ],
+    "accent": [
+      255,
+      255,
+      255
+    ]
+  },
+  "patches": {
+    "def/traffic_data.sii": [
+      {
+        "key": "max_vehicle_count",
+        "value": "300"
+      }
+    ]
+  }
+}

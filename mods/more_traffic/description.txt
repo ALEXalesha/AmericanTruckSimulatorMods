@@ -1,0 +1,8 @@
+БОЛЬШЕ МАШИН (только одиночная игра)
+
+- Лимит машин ИИ 50 -> 300 (max_vehicle_count).
+- Плотность: g_traffic в Документы\American Truck Simulator\config.cfg (uset g_traffic "3.0") при закрытой игре.
+
+MORE TRAFFIC (single player only)
+
+- AI vehicle limit 50 -> 300. Density: g_traffic in config.cfg (uset g_traffic "3.0").

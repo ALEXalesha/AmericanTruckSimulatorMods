@@ -1,0 +1,8 @@
+НЕ ПЕРЕВОРАЧИВАТЬСЯ (только одиночная игра)
+
+- Стабилизатор в 3 раза жёстче (sway_bar_stiffness_factor 1.0 -> 3.0).
+- Для полного эффекта: «Устойчивость транспортного средства» и «Устойчивость прицепа» на максимум.
+
+NO ROLLOVER (single player only)
+
+- Anti-roll bar 3x stiffer (sway_bar_stiffness_factor 1.0 -> 3.0).

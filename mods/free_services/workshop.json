@@ -1,0 +1,19 @@
+{
+  "title": "OpenRoad: Free Services",
+  "short": "FREE SERVICES",
+  "tag_en": "fuel, towing, restore",
+  "tag_ru": "топливо, эвакуация, сервис",
+  "type_tag": "Others",
+  "en": [
+    "- Fuel costs $0.0001 per litre in all 22 states of the 1.61 map: a full tank costs 0. It is not exactly 0 on purpose: with 0 the refuel panel divides by zero and shows \"Litres: -nan(ind)\".",
+    "- Free emergency call / towing to the nearest service, free emergency refuel, free wear restore in the service.",
+    "- Includes the economy parts of OpenRoad: No Sleep and No Fines.",
+    "Limits: repairing existing damage still costs money. ATS 1.61 has no ferries and no charging price in its def files, so the mod has nothing to change there (the ETS2 version also makes ferries free)."
+  ],
+  "ru": [
+    "- Топливо стоит 0.0001 $ за литр во всех 22 штатах карты 1.61: полный бак - 0. Ровно 0 не ставится специально: с нулём панель заправки делит на ноль и пишет \"Литров: -nan(ind)\".",
+    "- Бесплатные вызов помощи / эвакуация в ближайший сервис, экстренная заправка, восстановление износа в сервисе.",
+    "- Внутри также экономические правки OpenRoad: No Sleep и No Fines.",
+    "Ограничения: ремонт уже полученных повреждений платный. В ATS 1.61 нет паромов и цены зарядки в def-файлах, поэтому там мод ничего не меняет (версия для ETS2 ещё делает бесплатными паромы)."
+  ]
+}
