@@ -304,7 +304,100 @@ def release_assets(folders, out_dir):
                     full = os.path.join(dp, f)
                     z.write(full, os.path.relpath(full, os.path.dirname(base)).replace("\\", "/"))
     assets.append(allzip)
+    assets.append(mods_zip(scs_files=[a for a in assets if a.endswith(".scs")], out_dir=out_dir))
+    assets.append(money_zip(out_dir))
     return assets
+
+
+# One archive with all ten mods, so a player downloads one file instead of ten.
+MODS_ZIP = "OpenRoad_ATS_Mods.zip"
+MODS_README = """OpenRoad mods for American Truck Simulator 1.61 / Моды OpenRoad для American Truck Simulator 1.61
+
+English
+1. Put the .scs files from this archive into Documents\\American Truck Simulator\\mod
+2. Start the game, choose the profile, open the Mod Manager.
+3. Enable the mods you want in this order, top = highest priority:
+%(order)s
+   Super Power is off when Hyper Power is on (Hyper Power already is the stronger version).
+4. Single player only. Not for TruckersMP or Convoy.
+
+Русский
+1. Положить файлы .scs из архива в Документы\\American Truck Simulator\\mod
+2. Запустить игру, выбрать профиль, открыть Менеджер модов.
+3. Включить нужные моды в таком порядке, верхний - главный:
+%(order)s
+   Super Power выключить, если включён Hyper Power (Hyper Power - его более сильная версия).
+4. Только одиночная игра. Не для TruckersMP и Конвоя.
+"""
+
+
+def mods_zip(scs_files, out_dir):
+    """OpenRoad_ATS_Mods.zip: the ten release .scs plus an install note (EN + RU, CRLF)."""
+    import zipfile
+    order = "\n".join("   %d. %s" % (i + 1, ws(n)["title"]) for i, n in enumerate(build_mods.load_order()))
+    note = (MODS_README % {"order": order}).replace("\n", "\r\n").encode("utf-8")
+    path = os.path.join(out_dir, MODS_ZIP)
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        for f in sorted(scs_files):
+            z.write(f, os.path.basename(f))
+        z.writestr("INSTALL - УСТАНОВКА.txt", note)
+    return path
+
+
+# The money tool on its own: the two .bat files and the Python modules they need.
+# tests/test_workshop.py runs the unpacked copy, so a missing module shows up there.
+MONEY_ZIP = "ATS_Money_Tool.zip"
+MONEY_FILES = ["Деньги ATS.bat", "money.bat", "tools/money_menu.py", "tools/save_money.py",
+               "tools/sii_save.py", "tools/hashfs.py", "tools/cityhash103.py"]
+MONEY_README = """Деньги ATS / ATS money tool
+
+Русский
+1. Распаковать архив в любую папку.
+2. Нужен Python 3 с python.org (при установке отметить "Add python.exe to PATH").
+   Для зашифрованных сохранений один раз: py -m pip install -r requirements.txt
+3. Полностью закрыть игру.
+4. Дважды щёлкнуть "Деньги ATS.bat": покажет профили и деньги, как их показывает игра,
+   спросит сумму (10000000, "10 000 000" или "10 млн"), сделает копию сохранения и запишет.
+5. Когда напишет ЗАПИСАНО, запустить игру и загрузить последнее сохранение ("Продолжить").
+Копия до правки: Документы\\American Truck Simulator\\save_backups
+
+English
+1. Unpack anywhere. 2. Python 3 from python.org; for encrypted saves once:
+   py -m pip install -r requirements.txt
+3. Close the game. 4. Double-click "Деньги ATS.bat" (or money.bat; it asks in Russian):
+   it shows the profiles and the money as the game shows it, asks for the amount,
+   backs up the save and writes. 5. After ЗАПИСАНО (written) load the latest save.
+"""
+
+
+def money_zip(out_dir):
+    """ATS_Money_Tool.zip: "Деньги ATS.bat", money.bat, the modules, requirements, a note."""
+    import zipfile
+    path = os.path.join(out_dir, MONEY_ZIP)
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        for rel in MONEY_FILES:
+            z.write(os.path.join(ROOT, rel), rel)        # as stored: the .bat files keep CRLF
+        z.writestr("requirements.txt", "pycryptodome\r\n")
+        z.writestr("README - ПРОЧТИ.txt", MONEY_README.replace("\n", "\r\n").encode("utf-8"))
+    return path
+
+
+STEPS_FILE = "ШАГИ - загрузка в Мастерскую.txt"
+
+
+def write_steps(out_dir):
+    """The short Russian upload guide next to the folders (from tools/workshop_steps.ru.txt)."""
+    with open(os.path.join(ROOT, "tools", "workshop_steps.ru.txt"), encoding="utf-8") as fh:
+        text = fh.read()
+    rows = []
+    for i, n in enumerate(build_mods.load_order()):
+        w = ws(n)
+        rows.append("%-25s %-30s %s" % (w["title"], folder_name(i, n), w["type_tag"]))
+    text = text.replace("{table}", "\n".join(rows))
+    path = os.path.join(out_dir, STEPS_FILE)
+    with open(path, "w", encoding="utf-8", newline="\r\n") as fh:
+        fh.write(text)
+    return path
 
 
 def main():
@@ -314,6 +407,7 @@ def main():
                     help="where to put the release .scs files and the Workshop zip")
     a = ap.parse_args()
     folders = build(a.out)
+    print(write_steps(a.out))
     if os.path.isdir(a.release) and os.listdir(a.release):
         to_recycle_bin(a.release)
     for f in release_assets(folders, a.release):

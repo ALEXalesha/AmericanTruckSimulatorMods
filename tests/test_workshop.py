@@ -224,6 +224,83 @@ class WorkshopTest(unittest.TestCase):
                     for bad in FORBIDDEN:
                         self.assertNotIn(bad, z.read(n).lower(), "%s:%s" % (a, n))
         self.assertTrue(any(a.endswith("OpenRoad_Workshop_Folders.zip") for a in assets))
+        # every asset is free of personal data (names too). The money tool is code: it
+        # names the generic Steam userdata folder, so only the real personal strings count.
+        for a in assets:
+            if a.endswith(".zip"):
+                bads = FORBIDDEN
+                if a.endswith(build_workshop.MONEY_ZIP):
+                    bads = [b for b in FORBIDDEN if not b.startswith(b"steam")]
+                with zipfile.ZipFile(a) as z:
+                    for n in z.namelist():
+                        blob = n.lower().encode("utf-8") + b"\n" + z.read(n).lower()
+                        for bad in bads:
+                            self.assertNotIn(bad, blob, "%s:%s" % (a, n))
+
+    def test_mods_zip(self):
+        """OpenRoad_ATS_Mods.zip: the same ten .scs and the install note with the load order."""
+        import zipfile
+        import build_workshop
+        out = tempfile.mkdtemp(prefix="atsrel_test_")
+        assets = build_workshop.release_assets(folders(), out)
+        mz = [a for a in assets if a.endswith(build_workshop.MODS_ZIP)]
+        self.assertEqual(len(mz), 1)
+        with zipfile.ZipFile(mz[0]) as z:
+            names = z.namelist()
+            scs = sorted(n for n in names if n.endswith(".scs"))
+            self.assertEqual(scs, sorted(os.path.basename(a) for a in assets if a.endswith(".scs")))
+            for n in scs:
+                with open(os.path.join(out, n), "rb") as fh:
+                    self.assertEqual(z.read(n), fh.read(), n)
+            note = z.read("INSTALL - УСТАНОВКА.txt")
+            self.assertNotIn(b"\n", note.replace(b"\r\n", b""))      # Windows line ends
+            text = note.decode("utf-8")
+            pos = [text.index(ws_title) for ws_title in
+                   [build_workshop.ws(n)["title"] for n in build_mods.load_order()]]
+            self.assertEqual(pos, sorted(pos))                      # the load order, top first
+            self.assertIn("American Truck Simulator\\mod", text)
+
+    def test_money_zip_runs(self):
+        """ATS_Money_Tool.zip unpacked elsewhere: the tool starts (no missing module), the
+        .bat files keep CRLF, and there is no .venv or project file it would rely on."""
+        import subprocess
+        import zipfile
+        import build_workshop
+        out = tempfile.mkdtemp(prefix="atsmoney_test_")
+        path = build_workshop.money_zip(out)
+        dest = tempfile.mkdtemp(prefix="atsmoney_unz_")
+        with zipfile.ZipFile(path) as z:
+            names = z.namelist()
+            z.extractall(dest)
+        for rel in build_workshop.MONEY_FILES + ["requirements.txt", "README - ПРОЧТИ.txt"]:
+            self.assertIn(rel, names)
+        for bat in ("Деньги ATS.bat", "money.bat"):
+            data = open(os.path.join(dest, bat), "rb").read()
+            self.assertNotIn(b"\n", data.replace(b"\r\n", b""), bat)
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        for script in ("tools/money_menu.py", "tools/save_money.py"):
+            r = subprocess.run([sys.executable, "-I", os.path.join(dest, script), "--help"],
+                               cwd=dest, capture_output=True, text=True, encoding="utf-8", env=env)
+            self.assertEqual(r.returncode, 0, script + "\n" + r.stderr)
+
+    def test_steps_file(self):
+        """The short upload guide: one row per mod with its folder and tag, Create new."""
+        import build_workshop
+        out = tempfile.mkdtemp(prefix="atssteps_test_")
+        path = build_workshop.write_steps(out)
+        data = open(path, "rb").read()
+        self.assertNotIn(b"\n", data.replace(b"\r\n", b""))
+        text = data.decode("utf-8")
+        self.assertNotIn("{table}", text)
+        self.assertIn("Create new", text)
+        for i, n in enumerate(build_mods.load_order()):
+            w = build_workshop.ws(n)
+            row = [l for l in text.splitlines() if build_workshop.folder_name(i, n) in l]
+            self.assertEqual(len(row), 1, n)
+            self.assertIn(w["title"], row[0])
+            self.assertTrue(row[0].rstrip().endswith(w["type_tag"]), row[0])
+        for bad in FORBIDDEN:
+            self.assertNotIn(bad, data.lower())
 
     def test_no_personal_data(self):
         for base in folders():

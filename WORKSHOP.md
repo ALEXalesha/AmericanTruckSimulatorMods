@@ -82,6 +82,8 @@ Suggested upload order: start with a small one as a test (10 More Traffic), then
 .venv\Scripts\python -m unittest discover -s tests
 ```
 
+Короткая пошаговая инструкция с таблицей «мод - папка - тег» лежит рядом с папками: `workshop\ШАГИ - загрузка в Мастерскую.txt` (из `tools\workshop_steps.ru.txt`).
+
 Получится `workshop\NN_OpenRoad_<Имя>\`:
 - `upload\` - папка данных мода, её выбирать в загрузчике. Внутри `versions.sii` и `universal\` (manifest.sii, иконка 276x162, описание EN+RU, def-файлы);
 - `preview.jpg` - превью для Мастерской 640x360;

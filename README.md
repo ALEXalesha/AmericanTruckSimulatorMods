@@ -22,12 +22,22 @@ Ten single-player mods for American Truck Simulator (game version 1.61) - the sa
 ## Install
 
 - **Steam Workshop:** subscribe to the OpenRoad mods for ATS and enable them in the Mod Manager.
-- **From a release:** put the `.scs` files into `Documents\American Truck Simulator\mod` and enable them in the Mod Manager in the order below.
+- **From a release:** on the [latest release](https://github.com/ALEXalesha/AmericanTruckSimulatorMods/releases/latest) download `OpenRoad_ATS_Mods.zip` (all ten mods with a short install note) or single `.scs` files. Put the `.scs` files into `Documents\American Truck Simulator\mod`.
+- **Enable:** start the game, choose the profile, open the **Mod Manager**, move the mods you want to the active list in the order below (top = highest priority) and confirm. Do not enable Super Power together with Hyper Power.
+
+Release files:
+
+| File | What it is |
+|---|---|
+| `OpenRoad_ATS_Mods.zip` | All ten `.scs` mods and an install note |
+| `OpenRoad_<Name>.scs` | The same mods one by one |
+| `ATS_Money_Tool.zip` | "Деньги ATS.bat" with the files it needs (see Change money) |
+| `OpenRoad_Workshop_Folders.zip` | Ready folders for the Steam Workshop uploader |
 
 ## Change money
 
 1. Close the game completely.
-2. Double-click **`Деньги ATS.bat`** (or **`money.bat`**, the same thing) in the repository folder. It asks in Russian.
+2. Double-click **`Деньги ATS.bat`** (or **`money.bat`**, the same thing) in the repository folder. It asks in Russian. Without the repository: download `ATS_Money_Tool.zip` from the release, unpack it anywhere and run `Деньги ATS.bat` from there.
 3. It shows the profiles and the money **as the game shows it** (dollars, or pesos / Canadian dollars / euros if chosen in the options), asks for the new amount (`10000000`, `10 000 000` or `10 млн`), asks to close the game if it still runs, backs up the save and writes.
 4. When it says **ЗАПИСАНО** (written), start the game and load the latest save.
 
