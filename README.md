@@ -4,6 +4,9 @@ Ten single-player mods for American Truck Simulator (game version 1.61) - the sa
 
 [Русский](README.ru.md)
 
+[![Built with Claude Code](https://img.shields.io/badge/Built_with-Claude_Code-D97757?logo=claude&logoColor=white)](https://claude.com/claude-code)
+Code, tests and docs are written by Claude (Anthropic) in Claude Code. Ideas, testing and decisions - Alexey.
+
 > Not affiliated with or endorsed by SCS Software. "American Truck Simulator" is a trademark of SCS Software. Fan mods for single player only; they do not work in TruckersMP or Convoy.
 
 | Mod (release file) | What it does |
