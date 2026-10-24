@@ -1,5 +1,17 @@
 # Changelog / История изменений
 
+## 1.0.1 - 2026-10-24
+
+- Hyper Power and Super Power lift the game's 65 mph cap: `truck_speed_limit` 104.607 -> 1000 in `def/game_data.sii`. Players reported that the trucks stopped at 104 km/h; the cap works even with the speed limiter option off.
+- Every Workshop description lists the game files its mod replaces and says that another author's mod with the same file overrides it when higher in the Mod Manager (and the other way round). The line is built from mod.json, a test checks it for all ten mods.
+- Super Power no longer claims that only the speed limiter option caps the speed.
+
+---
+
+- Hyper Power и Super Power снимают потолок игры 65 миль/ч: `truck_speed_limit` 104.607 -> 1000 в `def/game_data.sii`. Грузовики упирались в 104 км/ч; потолок действует и с выключенным ограничителем.
+- В описании каждого мода в Мастерской перечислены файлы игры, которые он заменяет, и сказано, что чужой мод с тем же файлом перекрывает его, если стоит выше в Менеджере модов (и наоборот). Строка строится из mod.json, тест проверяет все десять модов.
+- Super Power больше не пишет, что скорость режет только настройка ограничителя.
+
 ## 1.0.0 - 2026-10-16
 
 - First version for American Truck Simulator 1.61: the ten OpenRoad mods of the ETS2 project (ETS2Mods 1.2.1), built from the ATS files.

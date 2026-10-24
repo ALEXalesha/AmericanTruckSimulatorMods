@@ -159,6 +159,15 @@ class AtsLawTest(unittest.TestCase):
         self.changed("super_power", "def/vehicle/physics.sii", "air_resistance", 1.5)
         self.changed("super_power", "def/vehicle/physics.sii", "brake_torque_factor", 2.0)
 
+    def test_power_mods_lift_the_65mph_cap(self):
+        """Алексей 24.10: Hyper/Super Power упирались в 104 км/ч. Это truck_speed_limit 104.607 (65 mph)
+        в def/game_data.sii - жёсткий потолок грузовика игрока, опция ограничителя его не снимает."""
+        self.assertAlmostEqual(one(self.stock("def/game_data.sii"), "truck_speed_limit"), 104.607, places=3)
+        for mod in ("hyper_power", "super_power"):
+            self.changed(mod, "def/game_data.sii", "truck_speed_limit", 1000)
+        # above the gear-limited top speed of Hyper Power (~640 km/h with the longest gearbox)
+        self.assertGreater(one(self.built("hyper_power", "def/game_data.sii"), "truck_speed_limit"), 700)
+
     def test_hyper_power(self):
         self.check_torque("hyper_power", 12)
         trans = build_mods.expand_path(self.defs, TRANS, "accessory_transmission_data")

@@ -156,14 +156,39 @@ class WorkshopTest(unittest.TestCase):
             self.assertIn("-----", only)
             self.assertIn(only, rt(os.path.join(base, "steam_page.txt")))
 
-    def test_new_items_have_no_change_note(self):
-        """ATS 1.0.0: every mod is a NEW Workshop item ("Create new"), so no steam_changelog.txt
-        (that file is only for an Update; the ETS2 project writes it from workshop.json)."""
-        with_note = [b for b in folders() if os.path.exists(os.path.join(b, "steam_changelog.txt"))]
-        self.assertEqual(with_note, [])
-        for name in build_mods.load_order():
-            with open(os.path.join(ROOT, "mods", name, "mod.json"), encoding="utf-8") as fh:
-                self.assertEqual(json.load(fh)["version"], "1.0.0", name)
+    def test_change_note_exactly_for_updated_mods(self):
+        """1.0.0 items were "Create new" (no note). A mod whose version moved past 1.0.0 is an
+        Update and needs steam_changelog.txt with its own version's note; nobody else gets one."""
+        import build_workshop
+        order = build_mods.load_order()
+        for i, name in enumerate(order):
+            base = [b for b in folders() if os.path.basename(b) == build_workshop.folder_name(i, name)][0]
+            version = build_mods.load_spec(name)["version"]
+            note = os.path.join(base, "steam_changelog.txt")
+            if version == "1.0.0":
+                self.assertFalse(os.path.exists(note), name)
+            else:
+                self.assertTrue(os.path.exists(note), name)
+                self.assertIn(version, rt(note), name)
+
+    def test_other_authors_line_names_every_replaced_file(self):
+        """Алексей 24.10 («только написать в описаниях»): каждый мод честно пишет, какие файлы игры
+        заменяет целиком - чужой мод с тем же файлом перекрывает его. Строка строится из mod.json,
+        поэтому не отстаёт от сборки; у каждого шаблона пути - человеческое имя, не «*»."""
+        import build_workshop
+        order = build_mods.load_order()
+        for i, name in enumerate(order):
+            base = [b for b in folders() if os.path.basename(b) == build_workshop.folder_name(i, name)][0]
+            text = rt(os.path.join(base, "upload", "universal", "mod_description.txt"))
+            for lang, head in (("en", "Other authors' mods"), ("ru", "Моды других авторов")):
+                files = build_workshop.replaced_files(name, lang)
+                self.assertTrue(files, name)
+                for f in files:
+                    self.assertNotIn("*", f, "%s: no human name for %s" % (name, f))
+                line = [l for l in text.splitlines() if l.startswith(head)]
+                self.assertEqual(len(line), 1, "%s %s" % (name, lang))
+                for f in files:
+                    self.assertIn(f, line[0], "%s %s" % (name, lang))
 
     def test_texts_are_for_ats(self):
         """The texts came from the ETS2 project: no euro, no 36 countries, no ferries promised,

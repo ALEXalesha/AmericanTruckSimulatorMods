@@ -3,7 +3,7 @@
   "file": "alexey_super_power.scs",
   "display_name": "Super Power (Alexey)",
   "category": "physics",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "icon": {
     "title": "SUPER POWER",
     "subtitle": "МОЩНОСТЬ x3",
@@ -35,6 +35,13 @@
       {
         "key": "brake_torque_factor",
         "value": "2.0"
+      }
+    ],
+    "def/game_data.sii": [
+      {
+        "key": "truck_speed_limit",
+        "value": "1000",
+        "note": "stock 104.607 km/h (65 mph): hard cap of every player truck, the game applies it even with the speed limiter option off"
       }
     ]
   }
