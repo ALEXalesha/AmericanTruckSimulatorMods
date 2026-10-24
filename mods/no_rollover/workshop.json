@@ -7,20 +7,22 @@
   "en": [
     "- Cargo centre of gravity 0.5 m lower in every trailer of the game (81 trailer chassis, cog_cargo_offset (0, -0.5, 0)): a loaded trailer no longer tips over in a sharp turn at 60-80 km/h. Checked in the game.",
     "- Front anti-roll bar 3x stiffer (sway_bar_stiffness_factor 1.0 -> 3.0): less body roll in corners.",
+    "- Required: set the Gameplay options \"Vehicle stability\" and \"Trailer stability\" to maximum - at minimum a loaded trailer still tips over (checked in the game).",
     "Limits: a truck can still roll in a crash or off a cliff - the mod removes the tipping in normal driving."
   ],
   "ru": [
     "- Центр тяжести груза на 0,5 м ниже во всех прицепах игры (81 шасси, cog_cargo_offset (0, -0,5, 0)): гружёный прицеп больше не ложится на бок в резком повороте на 60-80 км/ч. Проверено в игре.",
     "- Передний стабилизатор в 3 раза жёстче (sway_bar_stiffness_factor 1.0 -> 3.0): меньше крен в поворотах.",
+    "- Обязательно: в настройках «Геймплей» ползунки «Устойчивость транспортного средства» и «Устойчивость прицепа» на максимум - на минимуме прицеп всё равно ложится на бок (проверено в игре).",
     "Ограничения: в аварии или с обрыва грузовик всё ещё может перевернуться - мод убирает опрокидывание при обычной езде."
   ],
   "changelog": {
     "1.0.3": {
       "en": [
-        "1.0.3: the mod really stops the tipping now. The stiffer anti-roll bar alone did not help (players reported it): a loaded trailer still fell over in a sharp turn. Now the cargo centre of gravity is 0.5 m lower in all 81 trailer chassis; checked in the game."
+        "1.0.3: the mod really stops the tipping now. The stiffer anti-roll bar alone did not help (players reported it): a loaded trailer still fell over in a sharp turn. Now the cargo centre of gravity is 0.5 m lower in all 81 trailer chassis; checked in the game. Set both stability sliders (Gameplay) to maximum."
       ],
       "ru": [
-        "1.0.3: мод теперь правда не даёт опрокидываться. Одного жёсткого стабилизатора не хватало (об этом написали игроки): гружёный прицеп всё равно ложился на бок в резком повороте. Теперь центр тяжести груза на 0,5 м ниже во всех 81 шасси прицепов; проверено в игре."
+        "1.0.3: мод теперь правда не даёт опрокидываться. Одного жёсткого стабилизатора не хватало (об этом написали игроки): гружёный прицеп всё равно ложился на бок в резком повороте. Теперь центр тяжести груза на 0,5 м ниже во всех 81 шасси прицепов; проверено в игре. Поставьте оба ползунка устойчивости («Геймплей») на максимум."
       ]
     }
   }
