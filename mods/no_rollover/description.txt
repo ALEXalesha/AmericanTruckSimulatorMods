@@ -1,8 +1,9 @@
 НЕ ПЕРЕВОРАЧИВАТЬСЯ (только одиночная игра)
 
+- Центр тяжести груза во всех 81 прицепе на 0,5 м ниже: гружёный прицеп не ложится на бок в резком повороте.
 - Стабилизатор в 3 раза жёстче (sway_bar_stiffness_factor 1.0 -> 3.0).
-- Для полного эффекта: «Устойчивость транспортного средства» и «Устойчивость прицепа» на максимум.
 
 NO ROLLOVER (single player only)
 
+- Cargo centre of gravity 0.5 m lower in all 81 trailers: a loaded trailer does not tip over in a sharp turn.
 - Anti-roll bar 3x stiffer (sway_bar_stiffness_factor 1.0 -> 3.0).

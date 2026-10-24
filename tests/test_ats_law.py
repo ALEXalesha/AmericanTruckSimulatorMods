@@ -125,6 +125,24 @@ class AtsLawTest(unittest.TestCase):
     def test_no_rollover(self):
         self.changed("no_rollover", "def/vehicle/physics.sii", "sway_bar_stiffness_factor", 3.0)
 
+    def test_no_rollover_lowers_the_cargo_centre_of_gravity(self):
+        """Алексей 24.10: стабилизаторы x3 и даже x10 не спасали - гружёный прицеп ложился на бок в резком повороте.
+        Проба «центр тяжести груза на 0.5 м ниже» во всех шасси прицепов - «РАБОТАЕТ МОД». Закон: у каждого шасси
+        с cog_cargo_mass_max обе точки cog_cargo_offset ровно (0, -0.5, 0), по одной строке на блок шасси."""
+        trailers = build_mods.expand_path(self.defs, "def/vehicle/trailer/*/*.sii", "cog_cargo_mass_max")
+        self.assertGreaterEqual(len(trailers), 60)
+        units_total = 0
+        for p in trailers:
+            built = self.built("no_rollover", p)
+            n = units(self.stock(p), "accessory_chassis_data")
+            units_total += n
+            for key in ("cog_cargo_offset_min", "cog_cargo_offset_max"):
+                got = re.findall(r"^\s*%s\s*:\s*\(([^)]*)\)" % key, built, re.M)
+                self.assertEqual(len(got), n, "%s %s" % (p, key))
+                for v in got:
+                    self.assertEqual([float(x) for x in v.split(",")], [0.0, -0.5, 0.0], p)
+        self.assertGreaterEqual(units_total, len(trailers))
+
     # ---- More Traffic
     def test_more_traffic_sets_the_existing_limit(self):
         """ATS sets max_vehicle_count: 50 (ETS2 has it commented out): change it, do not add a second line."""

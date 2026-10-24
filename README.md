@@ -19,7 +19,7 @@ Code, tests and docs are written by Claude (Anthropic) in Claude Code. Ideas, te
 | OpenRoad: No Sleep (`OpenRoad_No_Sleep.scs`) | The driver never gets tired. |
 | OpenRoad: No Fuel (`OpenRoad_No_Fuel.scs`) | Engines use 1/10000 of the fuel. |
 | OpenRoad: No Fines (`OpenRoad_No_Fines.scs`) | No police or camera fines, no cancel fine, cargo damage does not cut the pay, 30 days for late jobs. |
-| OpenRoad: No Rollover (`OpenRoad_No_Rollover.scs`) | Front anti-roll bar 3x stiffer; plus the stability sliders in the options. |
+| OpenRoad: No Rollover (`OpenRoad_No_Rollover.scs`) | Cargo centre of gravity 0.5 m lower in all 81 trailers (no tipping in sharp turns), anti-roll bar 3x stiffer. |
 | OpenRoad: No Damage (`OpenRoad_No_Damage.scs`) | No damage, no wear, no cargo damage. |
 | OpenRoad: More Traffic (`OpenRoad_More_Traffic.scs`) | AI vehicle limit 50 -> 300; the density is the game variable `g_traffic`. |
 
@@ -65,7 +65,7 @@ Top of the Mod Manager list = highest priority (`mods/order.json`): Hyper Power 
 - No Sleep: maximum_driving_time 840 -> 10,000,000.
 - No Fuel: consumption_coef 0.0001 in 177 engines (33 already had one, 0.89-0.94: changed; 144: added).
 - No Fines: 14 fines and offence probabilities -> 0, abandoned_job_fine 12000 -> 0, cargo damage cost -> 0, late delivery 30 days.
-- No Damage: 13 damage and wear coefficients -> 0. No Rollover: sway_bar_stiffness_factor 1.0 -> 3.0.
+- No Damage: 13 damage and wear coefficients -> 0. No Rollover: cog_cargo_offset_min/max -> (0, -0.5, 0) in 81 trailer chassis, sway_bar_stiffness_factor 1.0 -> 3.0.
 - Super Power: torque x3, air_resistance 3.0 -> 1.5, brake_torque_factor 2.0. Hyper Power: torque x12, differential_ratio x0.35 (181 gearboxes), grip_factor 1.3 (24 tyres), air_resistance 0.1, brakes x4, brake cooling x5, steering minimum 0.25 -> 0.1.
 - More Traffic: max_vehicle_count 50 -> 300.
 

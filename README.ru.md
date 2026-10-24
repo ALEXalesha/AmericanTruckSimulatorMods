@@ -19,7 +19,7 @@
 | OpenRoad: No Sleep (`OpenRoad_No_Sleep.scs`) | Водитель не устаёт. |
 | OpenRoad: No Fuel (`OpenRoad_No_Fuel.scs`) | Двигатели тратят 1/10000 топлива. |
 | OpenRoad: No Fines (`OpenRoad_No_Fines.scs`) | Нет штрафов полиции и камер, нет штрафа за отказ, повреждение груза не уменьшает оплату, 30 дней на опоздание. |
-| OpenRoad: No Rollover (`OpenRoad_No_Rollover.scs`) | Передний стабилизатор в 3 раза жёстче; плюс ползунки устойчивости в настройках. |
+| OpenRoad: No Rollover (`OpenRoad_No_Rollover.scs`) | Центр тяжести груза на 0,5 м ниже во всех 81 прицепе (не ложится на бок в резком повороте), стабилизатор x3. |
 | OpenRoad: No Damage (`OpenRoad_No_Damage.scs`) | Нет урона, износа и повреждения груза. |
 | OpenRoad: More Traffic (`OpenRoad_More_Traffic.scs`) | Лимит машин ИИ 50 -> 300; плотность - переменная игры `g_traffic`. |
 
@@ -99,7 +99,7 @@ python tools/save_money.py --save autosave --restore
 | No Fines | `def/police_data.sii` | fine_amounts[0..13] -> 0, offence_probabilty / offence_police_probabilty -> 0, fine_factor_base/step -> 0 |
 | No Fines | `def/economy_data.sii` | abandoned_job_fine 12000 -> 0, cargo_damage_cost 5 -> 0, cargo_damage_cost_factor 0.04 -> 0, late_delivery_max_overtime -> 43200 (30 дней) |
 | No Damage | `def/damage_data.sii` | 13 коэффициентов урона и износа -> 0 |
-| No Rollover | `def/vehicle/physics.sii` | sway_bar_stiffness_factor 1.0 -> 3.0 |
+| No Rollover | `def/vehicle/physics.sii`, 81 шасси прицепов | sway_bar_stiffness_factor 1.0 -> 3.0, cog_cargo_offset_min/max -> (0, -0.5, 0) |
 | Super Power | двигатели, `physics.sii` | torque x3, air_resistance 3.0 -> 1.5, brake_torque_factor 1.0 -> 2.0 |
 | Hyper Power | двигатели, 181 коробка, 24 шины, `physics.sii` | torque x12, differential_ratio x0.35, grip_factor 1.3 (добавлен), air_resistance 3.0 -> 0.1, brake_torque_factor 4.0, brake_cooling_rate 0.01 -> 0.05, steering_sensitivity_multiplier_minimum 0.25 -> 0.1 |
 | More Traffic | `def/traffic_data.sii` | max_vehicle_count 50 -> 300 |

@@ -52,7 +52,8 @@ def jpeg_size(data):
 
 
 def values(text, key):
-    return [m.group(1) for m in re.finditer(r"^\s*%s\s*:\s*([^#\s]+)" % re.escape(key), text, re.M)]
+    # a tuple value like (0.0, -0.5, 0.0) is one value
+    return [m.group(1) for m in re.finditer(r"^\s*%s\s*:\s*(\([^)]*\)|[^#\s]+)" % re.escape(key), text, re.M)]
 
 
 class CityHashTest(unittest.TestCase):

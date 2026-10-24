@@ -1,5 +1,15 @@
 # Changelog / История изменений
 
+## 1.0.3 - 2026-10-24
+
+- No Rollover 1.0.3 really stops the tipping: the cargo centre of gravity is 0.5 m lower in all 81 trailer chassis (`cog_cargo_offset_min/max` -> (0, -0.5, 0)). The stiffer anti-roll bar alone (x3, a test with x10 too) did not help: a loaded trailer fell over in a sharp turn. Checked in the game on 24.10.
+- Law: every trailer chassis with `cog_cargo_mass_max` gets both points, one line per chassis block.
+
+---
+
+- No Rollover 1.0.3 правда не даёт опрокидываться: центр тяжести груза на 0,5 м ниже во всех 81 шасси прицепов (`cog_cargo_offset_min/max` -> (0, -0.5, 0)). Одного жёсткого стабилизатора (x3, проба и с x10) не хватало: гружёный прицеп ложился на бок в резком повороте. Проверено в игре 24.10.
+- Закон: у каждого шасси с `cog_cargo_mass_max` обе точки, по строке на блок шасси.
+
 ## 1.0.2 - 2026-10-24
 
 - Hyper Power, Super Power and No Fuel now change every truck: 83 of 181 gearboxes and 4 of 177 engines were left stock. Our archive reader (tools/cityhash103.py) hashed paths over 64 characters with the CityHash 1.0 branch, but HashFS uses the 1.1 branch there, so 4573 game files (every gearbox with a retarder, all Cascadia gearboxes) were invisible. With Hyper Power those trucks stopped at 104 mph on the rev limiter; now 250 km/h and more (checked in the game).
