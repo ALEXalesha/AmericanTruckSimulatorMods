@@ -12,8 +12,8 @@ Code, tests and docs are written by Claude (Anthropic) in Claude Code. Ideas, te
 
 | Mod (release file) | What it does |
 |---|---|
-| OpenRoad: Hyper Power (`OpenRoad_Hyper_Power.scs`) | Extreme: torque x12, final drive x0.35 (gear-limited top speed about 540-640 km/h), lifts the game's 65 mph cap, almost no air drag, +30% grip, brakes x4. Instead of Super Power. |
-| OpenRoad: Super Power (`OpenRoad_Super_Power.scs`) | Torque x3, half the air drag, brakes x2, lifts the game's 65 mph cap. Still drivable. |
+| OpenRoad: Hyper Power (`OpenRoad_Hyper_Power.scs`) | Extreme: torque x12, final drive x0.35 (gear-limited top speed about 540-640 km/h), almost no air drag, +30% grip, brakes x4. Instead of Super Power. |
+| OpenRoad: Super Power (`OpenRoad_Super_Power.scs`) | Torque x3, half the air drag, brakes x2. Still drivable. |
 | OpenRoad: Big Money (`OpenRoad_Big_Money.scs`) | Job pay x10; a new profile starts with $10,000,000. |
 | OpenRoad: Free Services (`OpenRoad_Free_Services.scs`) | Fuel almost free ($0.0001/l) in all 22 states, free towing, emergency refuel and wear restore. |
 | OpenRoad: No Sleep (`OpenRoad_No_Sleep.scs`) | The driver never gets tired. |
@@ -56,18 +56,20 @@ The save keeps money in US dollars; the game shows it in the profile's currency 
 
 ## Load order
 
-Top of the Mod Manager list = highest priority (`mods/order.json`): Hyper Power (or off), Super Power (off when Hyper Power is on), Big Money, Free Services, No Sleep, No Fuel, No Fines, No Rollover, No Damage, More Traffic, then other mods. Mods that share a file (`economy_data.sii`, the 173 engine files, `physics.sii`) carry the changes of the mods below them, so nothing is lost. Other authors' mods that replace the same files (physics, engines, economy, traffic) override ours when they are higher in the list, and the other way round; every Workshop description lists the files its mod replaces.
+Top of the Mod Manager list = highest priority (`mods/order.json`): Hyper Power (or off), Super Power (off when Hyper Power is on), Big Money, Free Services, No Sleep, No Fuel, No Fines, No Rollover, No Damage, More Traffic, then other mods. Mods that share a file (`economy_data.sii`, the 177 engine files, `physics.sii`) carry the changes of the mods below them, so nothing is lost. Other authors' mods that replace the same files (physics, engines, economy, traffic) override ours when they are higher in the list, and the other way round; every Workshop description lists the files its mod replaces.
 
 ## Changed values (ATS 1.61.3)
 
 - Big Money: revenue_coef_per_km 0.9 -> 9, cargo_market_revenue_coef_per_km 1.0 -> 10, driver_revenue_coef_per_km 0.67 -> 6.7, driver_cargo_market_revenue_coef_per_km 0.77 -> 7.7, fixed_revenue 600 -> 6000 (x10 of the game's own values); new profile money_account 1500 -> 10,000,000.
 - Free Services: tow_price_base/factor, refuel_price_base/factor -> 0; restore prices -> 0; fuel_price in 22 states (1.00-2.17 $/l) -> 0.0001.
 - No Sleep: maximum_driving_time 840 -> 10,000,000.
-- No Fuel: consumption_coef 0.0001 in 173 engines (33 already had one, 0.89-0.94: changed; 140: added).
+- No Fuel: consumption_coef 0.0001 in 177 engines (33 already had one, 0.89-0.94: changed; 144: added).
 - No Fines: 14 fines and offence probabilities -> 0, abandoned_job_fine 12000 -> 0, cargo damage cost -> 0, late delivery 30 days.
 - No Damage: 13 damage and wear coefficients -> 0. No Rollover: sway_bar_stiffness_factor 1.0 -> 3.0.
-- Super Power: torque x3, air_resistance 3.0 -> 1.5, brake_torque_factor 2.0. Super and Hyper Power: truck_speed_limit 104.607 -> 1000 in `def/game_data.sii` (the 65 mph cap that kept every truck at 104 km/h even with the speed limiter option off). Hyper Power: torque x12, differential_ratio x0.35 (98 gearboxes), grip_factor 1.3 (24 tyres), air_resistance 0.1, brakes x4, brake cooling x5, steering minimum 0.25 -> 0.1.
+- Super Power: torque x3, air_resistance 3.0 -> 1.5, brake_torque_factor 2.0. Hyper Power: torque x12, differential_ratio x0.35 (181 gearboxes), grip_factor 1.3 (24 tyres), air_resistance 0.1, brakes x4, brake cooling x5, steering minimum 0.25 -> 0.1.
 - More Traffic: max_vehicle_count 50 -> 300.
+
+Above 65 mph: turn off the game's Speed limiter option (Settings > Gameplay). A mod cannot lift it: the game ignores `def/game_data.sii` (`truck_speed_limit`) from mods - checked in the game on 24.10.
 
 Differences from ETS2, checked by `tests/test_ats_law.py` and `tests/test_pay_law.py` on the installed game: start money $1,500 and coefficient 0.77; no `secondary_torque`, no ferries, no charging price; 33 engines already have `consumption_coef`; `max_vehicle_count` is set, not commented out; most tyres have no `roll_resistance`, so grip goes after `price`.
 

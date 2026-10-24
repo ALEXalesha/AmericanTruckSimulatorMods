@@ -192,15 +192,15 @@ class WorkshopTest(unittest.TestCase):
 
     def test_texts_are_for_ats(self):
         """The texts came from the ETS2 project: no euro, no 36 countries, no ferries promised,
-        the ATS numbers (0.77 -> 7.7, $1,500, 22 states, 173 engines, 98 gearboxes)."""
+        the ATS numbers (0.77 -> 7.7, $1,500, 22 states, 177 engines, 181 gearboxes)."""
         all_text = ""
         for base in folders():
             all_text += rt(os.path.join(base, "upload", "universal", "mod_description.txt"))
         for bad in ("€", "EUR", "Euro Truck", "36 countries", "36 стран", "Ла-Манш", "Channel",
                     "203 engines", "170 gearboxes", "DAF", "Scania", "Iveco"):
             self.assertNotIn(bad, all_text, bad)
-        for good in ("0.77 -> 7.7", "$1,500", "1500 $", "22 states", "22 штатах", "173 engines",
-                     "98 gearboxes", "American Truck Simulator/config.cfg", "840"):
+        for good in ("0.77 -> 7.7", "$1,500", "1500 $", "22 states", "22 штатах", "177 engines",
+                     "181 gearboxes", "American Truck Simulator/config.cfg", "840"):
             self.assertIn(good, all_text, good)
 
     def test_files_valid_for_uploader(self):

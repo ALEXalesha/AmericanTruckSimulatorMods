@@ -12,8 +12,8 @@
 
 | Мод (файл в выпуске) | Что делает |
 |---|---|
-| OpenRoad: Hyper Power (`OpenRoad_Hyper_Power.scs`) | Безумный: момент x12, главная пара x0.35 (потолок по передачам около 540-640 км/ч), снимает потолок игры 65 миль/ч, почти нет сопротивления воздуха, сцепление +30%, тормоза x4. Вместо Super Power. |
-| OpenRoad: Super Power (`OpenRoad_Super_Power.scs`) | Момент x3, сопротивление воздуха вдвое меньше, тормоза x2, снимает потолок игры 65 миль/ч. Управляемо. |
+| OpenRoad: Hyper Power (`OpenRoad_Hyper_Power.scs`) | Безумный: момент x12, главная пара x0.35 (потолок по передачам около 540-640 км/ч), почти нет сопротивления воздуха, сцепление +30%, тормоза x4. Вместо Super Power. |
+| OpenRoad: Super Power (`OpenRoad_Super_Power.scs`) | Момент x3, сопротивление воздуха вдвое меньше, тормоза x2. Управляемо. |
 | OpenRoad: Big Money (`OpenRoad_Big_Money.scs`) | Оплата рейсов x10; новый профиль начинает с 10 000 000 $. |
 | OpenRoad: Free Services (`OpenRoad_Free_Services.scs`) | Топливо почти даром (0.0001 $/л) во всех 22 штатах, бесплатные эвакуация, экстренная заправка и восстановление износа. |
 | OpenRoad: No Sleep (`OpenRoad_No_Sleep.scs`) | Водитель не устаёт. |
@@ -83,7 +83,7 @@ python tools/save_money.py --save autosave --restore
 10. More Traffic
 11. другие моды
 
-Некоторые моды меняют один и тот же файл: `economy_data.sii` (Big Money, Free Services, No Sleep, No Fines), 173 файла двигателей (Hyper/Super Power, No Fuel), `physics.sii` (Hyper/Super Power, No Rollover). Игра берёт только самую верхнюю копию, поэтому каждый мод несёт и правки модов ниже по списку - ничего не теряется. Hyper Power заменяет Super Power и его x3 не несёт. Обратная сторона: мод в одиночку приносит правки нижних в общих файлах (например, Big Money в одиночку тоже даёт бесплатную эвакуацию). Моды других авторов, заменяющие те же файлы (физика, двигатели, экономика, трафик), перекрывают наши, если стоят выше в списке, и наоборот; в описании каждого мода в Мастерской перечислены файлы, которые он заменяет.
+Некоторые моды меняют один и тот же файл: `economy_data.sii` (Big Money, Free Services, No Sleep, No Fines), 177 файлов двигателей (Hyper/Super Power, No Fuel), `physics.sii` (Hyper/Super Power, No Rollover). Игра берёт только самую верхнюю копию, поэтому каждый мод несёт и правки модов ниже по списку - ничего не теряется. Hyper Power заменяет Super Power и его x3 не несёт. Обратная сторона: мод в одиночку приносит правки нижних в общих файлах (например, Big Money в одиночку тоже даёт бесплатную эвакуацию). Моды других авторов, заменяющие те же файлы (физика, двигатели, экономика, трафик), перекрывают наши, если стоят выше в списке, и наоборот; в описании каждого мода в Мастерской перечислены файлы, которые он заменяет.
 
 ## Что поменяно (ATS 1.61.3)
 
@@ -95,14 +95,16 @@ python tools/save_money.py --save autosave --restore
 | Free Services | `def/service_data.sii` | truck/trailer_restore_accessory_fixed_price 1000 -> 0, ..._price_coef 1.1 -> 0 |
 | Free Services | `def/country/*.sui` (22 штата) | fuel_price (1.00-2.17 $/л) -> 0.0001 |
 | No Sleep | `def/economy_data.sii` | maximum_driving_time 840 -> 10 000 000 |
-| No Fuel | 173 двигателя | consumption_coef -> 0.0001 (у 33 он уже был, 0.89-0.94, у 140 добавлен) |
+| No Fuel | 177 двигателей | consumption_coef -> 0.0001 (у 33 он уже был, 0.89-0.94, у 144 добавлен) |
 | No Fines | `def/police_data.sii` | fine_amounts[0..13] -> 0, offence_probabilty / offence_police_probabilty -> 0, fine_factor_base/step -> 0 |
 | No Fines | `def/economy_data.sii` | abandoned_job_fine 12000 -> 0, cargo_damage_cost 5 -> 0, cargo_damage_cost_factor 0.04 -> 0, late_delivery_max_overtime -> 43200 (30 дней) |
 | No Damage | `def/damage_data.sii` | 13 коэффициентов урона и износа -> 0 |
 | No Rollover | `def/vehicle/physics.sii` | sway_bar_stiffness_factor 1.0 -> 3.0 |
-| Super Power | двигатели, `physics.sii`, `game_data.sii` | torque x3, air_resistance 3.0 -> 1.5, brake_torque_factor 1.0 -> 2.0, truck_speed_limit 104.607 -> 1000 |
-| Hyper Power | двигатели, 98 коробок, 24 шины, `physics.sii`, `game_data.sii` | torque x12, differential_ratio x0.35, grip_factor 1.3 (добавлен), air_resistance 3.0 -> 0.1, brake_torque_factor 4.0, brake_cooling_rate 0.01 -> 0.05, steering_sensitivity_multiplier_minimum 0.25 -> 0.1, truck_speed_limit 104.607 -> 1000 (потолок 65 миль/ч: без него грузовик не ехал быстрее 104 км/ч даже с выключенным ограничителем) |
+| Super Power | двигатели, `physics.sii` | torque x3, air_resistance 3.0 -> 1.5, brake_torque_factor 1.0 -> 2.0 |
+| Hyper Power | двигатели, 181 коробка, 24 шины, `physics.sii` | torque x12, differential_ratio x0.35, grip_factor 1.3 (добавлен), air_resistance 3.0 -> 0.1, brake_torque_factor 4.0, brake_cooling_rate 0.01 -> 0.05, steering_sensitivity_multiplier_minimum 0.25 -> 0.1 |
 | More Traffic | `def/traffic_data.sii` | max_vehicle_count 50 -> 300 |
+
+Выше 65 миль/ч: выключите опцию игры «Ограничитель скорости» (Настройки > Геймплей). Мод её не снимет: `def/game_data.sii` (`truck_speed_limit`) из мода игра не применяет - проверено в игре 24.10.
 
 Чем ATS отличается от ETS2 (поэтому это не простая копия): другие стартовые деньги (1500 $) и коэффициент 0.77; нет `secondary_torque`, паромов и цены зарядки; у части двигателей `consumption_coef` уже есть (мод его меняет, а не добавляет второй); `max_vehicle_count` в ATS задан, а не закомментирован; у большинства шин нет строки `roll_resistance`, поэтому сцепление вставляется после `price`. Всё это проверяют законы `tests/test_ats_law.py` и `tests/test_pay_law.py` на файлах установленной игры.
 

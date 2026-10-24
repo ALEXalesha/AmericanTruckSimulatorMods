@@ -5,16 +5,16 @@
   "tag_ru": "момент x3, управляемо",
   "type_tag": "Physics",
   "en": [
-    "Strong but drivable power boost for every truck of the game (173 engines, 19 truck models).",
+    "Strong but drivable power boost for every truck of the game (177 engines, 19 truck models).",
     "- Engine torque x3, air resistance 3.0 -> 1.5, brakes x2.",
-    "- Top speed is still capped by gearing and the end of the torque curves (about 190 km/h for a typical gearbox, up to about 225 km/h with the longest one). The game's own 65 mph cap (truck_speed_limit 104.6 km/h in game_data.sii) is lifted by this mod.",
+    "- Top speed is still capped by gearing and the end of the torque curves (about 190 km/h for a typical gearbox, up to about 225 km/h with the longest one). Above 65 mph: turn off the Speed limiter option (Settings > Gameplay).",
     "- Includes the fuel change of OpenRoad: No Fuel and the physics part of OpenRoad: No Rollover.",
     "Trucks: in ATS every truck brand comes in its own package (dlc_*.scs), some free with the game, some paid DLCs. The mod contains the engine files of all 19 truck models of the 1.61 game (Freightliner, International, Kenworth, Mack, Peterbilt, Volvo, Western Star). Without a truck DLC its files are simply unused; the game log may show warnings about them."
   ],
   "ru": [
-    "Сильная, но управляемая прибавка мощности для всех грузовиков игры (173 двигателя, 19 моделей).",
+    "Сильная, но управляемая прибавка мощности для всех грузовиков игры (177 двигателей, 19 моделей).",
     "- Крутящий момент x3, сопротивление воздуха 3.0 -> 1.5, тормоза x2.",
-    "- Скорость по-прежнему ограничена передачами и концом кривой момента (около 190 км/ч у типичной коробки, до 225 км/ч у самой длинной). Потолок самой игры 65 миль/ч (truck_speed_limit 104,6 км/ч в game_data.sii) мод снимает.",
+    "- Скорость по-прежнему ограничена передачами и концом кривой момента (около 190 км/ч у типичной коробки, до 225 км/ч у самой длинной). Выше 65 миль/ч: выключите опцию «Ограничитель скорости» (Настройки > Геймплей).",
     "- Внутри также правка расхода OpenRoad: No Fuel и физика OpenRoad: No Rollover.",
     "Грузовики: в ATS каждая марка лежит в своём пакете (dlc_*.scs), часть бесплатно с игрой, часть - платные DLC. Мод содержит файлы двигателей всех 19 моделей грузовиков версии 1.61 (Freightliner, International, Kenworth, Mack, Peterbilt, Volvo, Western Star). Без DLC грузовика его файлы просто не используются; в логе игры могут быть предупреждения."
   ],
@@ -25,6 +25,14 @@
       ],
       "ru": [
         "1.0.1: грузовики больше не упираются в 104 км/ч - мод снимает потолок игры 65 миль/ч (truck_speed_limit в game_data.sii). В описании теперь перечислены файлы игры, которые мод заменяет."
+      ]
+    },
+    "1.0.2": {
+      "en": [
+        "1.0.2: 83 of 181 gearboxes and 4 of 177 engines were left stock - our archive reader could not see game files with paths over 64 characters (every gearbox with a retarder, all Cascadia gearboxes and more). Now every truck gets the change. The 65 mph cap is the game's Speed limiter option (Settings > Gameplay): turn it off; the game_data.sii change of 1.0.1 did nothing and is gone."
+      ],
+      "ru": [
+        "1.0.2: 83 из 181 коробки и 4 из 177 двигателей оставались заводскими - наш читатель архивов не видел файлы игры с путём длиннее 64 символов (все коробки с ретардером, все коробки Cascadia и другие). Теперь правка есть у каждого грузовика. Потолок 65 миль/ч - это опция игры «Ограничитель скорости» (Настройки > Геймплей), её надо выключить; правка game_data.sii из 1.0.1 ничего не делала и убрана."
       ]
     }
   }

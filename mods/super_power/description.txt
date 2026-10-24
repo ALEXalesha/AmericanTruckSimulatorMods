@@ -1,13 +1,15 @@
 СУПЕР МОЩНОСТЬ (только одиночная игра)
 
-- Крутящий момент всех 173 двигателей x3.
+- Крутящий момент всех 177 двигателей x3.
 - Сопротивление воздуха 3.0 -> 1.5, тормоза x2.
 - Скорость по-прежнему ограничена передачами (около 190-225 км/ч).
+Выше 65 миль/ч: выключите в настройках «Геймплей» опцию «Ограничитель скорости» (Speed limiter).
 Внутри также правки No Fuel и No Rollover.
 Порядок: ниже Hyper Power (или Hyper Power выключен).
 
 SUPER POWER (single player only)
 
-- Torque of all 173 engines x3, air resistance 3.0 -> 1.5, brakes x2.
+- Torque of all 177 engines x3, air resistance 3.0 -> 1.5, brakes x2.
 - Top speed still limited by gearing (about 190-225 km/h).
+Above 65 mph: turn off Settings > Gameplay > Speed limiter.
 Also contains No Fuel and No Rollover.

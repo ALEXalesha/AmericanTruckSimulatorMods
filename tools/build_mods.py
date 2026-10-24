@@ -239,7 +239,7 @@ def expand_path(defs, pattern, require=None):
                 if fnmatch.fnmatchcase(name, part):
                     nxt.append(base + "/" + name if base else name)
         cur = nxt
-    # a directory listing can name a file that has no entry (seen in 1.61 def.scs); skip those
+    # guard only: "listed but no entry" was the CityHash bug for paths > 64 bytes (fixed 24.10)
     hits = sorted(h for h in set(cur) if defs.source(h) is not None)
     if require:
         hits = [h for h in hits if require.encode() in defs.read(h)]

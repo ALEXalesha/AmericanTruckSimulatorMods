@@ -61,6 +61,40 @@ class CityHashTest(unittest.TestCase):
         self.assertEqual(cityhash64(""), 11160318154034397263)
         self.assertEqual(cityhash64("version.sii"), 203568326075060621)
 
+    def test_paths_longer_than_64_bytes(self):
+        """Regression 24.10: the > 64 byte branch followed CityHash 1.0, but HashFS uses the 1.1 variant there.
+        Every def path over 64 characters (4573 in 1.61 def.scs, 83 of 181 gearboxes) was invisible, so the
+        power mods skipped them and those trucks kept the stock top speed (~167 km/h on the rev limiter)."""
+        # values taken from dlc_kenworth_t680.scs / def.scs entry tables
+        self.assertEqual(cityhash64("def/vehicle/truck/kenworth.t680/transmission/10_speed_retarder.sii"),
+                         10515013647575403575)
+        self.assertEqual(cityhash64("def/sign/template/navigation/us_hw_420x300_int_rnd_1dir_1shld_1dest_str_"
+                                    "1dir_1shld_1dest_left_1dir_1shld_1dest_right_1.sii"),
+                         4867924468406487246)
+
+
+@unittest.skipUnless(HAVE_GAME, "game not installed")
+class ArchiveListingTest(unittest.TestCase):
+    def test_every_listed_truck_file_is_readable(self):
+        """Every file a directory listing names under def/vehicle has an entry (nothing invisible to the mods)."""
+        defs = build_mods.LayeredFs(GAME)
+        missing, seen = [], 0
+        for name, fs in defs.archives:
+            stack = ["def/vehicle"]
+            while stack:
+                p = stack.pop()
+                try:
+                    dirs, files = fs.listdir(p)
+                except KeyError:
+                    continue
+                for f in files:
+                    seen += 1
+                    if fs.get(p + "/" + f) is None:
+                        missing.append("%s:%s/%s" % (name, p, f))
+                stack.extend(p + "/" + d for d in dirs)
+        self.assertGreater(seen, 1000)
+        self.assertEqual(missing[:5], [])
+
 
 @unittest.skipUnless(HAVE_GAME, "game not installed")
 class BuiltModsTest(unittest.TestCase):
@@ -141,7 +175,7 @@ class BuiltModsTest(unittest.TestCase):
             for o, n in zip(orig, new):
                 self.assertAlmostEqual(float(n), float(o) * 3, delta=1.0)
         self.assertEqual(got, units)
-        self.assertEqual(units, 173)              # ATS 1.61.3 with all truck DLC files
+        self.assertEqual(units, 177)              # ATS 1.61.3 with all truck DLC files (173 before the CityHash fix)
 
     def test_no_zero_divisors(self):
         """Values the game divides by (or multiplies into a divisor) must never be 0 or negative."""

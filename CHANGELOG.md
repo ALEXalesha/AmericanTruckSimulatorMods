@@ -1,5 +1,17 @@
 # Changelog / История изменений
 
+## 1.0.2 - 2026-10-24
+
+- Hyper Power, Super Power and No Fuel now change every truck: 83 of 181 gearboxes and 4 of 177 engines were left stock. Our archive reader (tools/cityhash103.py) hashed paths over 64 characters with the CityHash 1.0 branch, but HashFS uses the 1.1 branch there, so 4573 game files (every gearbox with a retarder, all Cascadia gearboxes) were invisible. With Hyper Power those trucks stopped at 104 mph on the rev limiter; now 250 km/h and more (checked in the game).
+- The `truck_speed_limit` change of 1.0.1 is gone: the game ignores `def/game_data.sii` from mods (checked with an audible value). The 65 mph cap is the Speed limiter option in Settings > Gameplay; the descriptions say so.
+- Laws: two long paths with hashes from the game archives, every listed file under def/vehicle has an entry, the power mods ship no game_data.sii.
+
+---
+
+- Hyper Power, Super Power и No Fuel теперь меняют каждый грузовик: 83 из 181 коробки и 4 из 177 двигателей оставались заводскими. Наш читатель архивов (tools/cityhash103.py) считал хеш путей длиннее 64 символов по ветке CityHash 1.0, а HashFS там использует ветку 1.1, поэтому 4573 файла игры были невидимы (все коробки с ретардером, все коробки Cascadia). С Hyper Power такие грузовики упирались в 104 миль/ч на отсечке; теперь 250 км/ч и больше (проверено в игре).
+- Правка `truck_speed_limit` из 1.0.1 убрана: `def/game_data.sii` из мода игра не применяет (проверено на слышимом параметре). Потолок 65 миль/ч - это опция «Ограничитель скорости» в Настройки > Геймплей, описания говорят об этом.
+- Законы: два длинных пути с хешами из архивов игры, у каждого файла из списков def/vehicle есть запись, моды мощности не кладут game_data.sii.
+
 ## 1.0.1 - 2026-10-24
 
 - Hyper Power and Super Power lift the game's 65 mph cap: `truck_speed_limit` 104.607 -> 1000 in `def/game_data.sii`. Players reported that the trucks stopped at 104 km/h; the cap works even with the speed limiter option off.

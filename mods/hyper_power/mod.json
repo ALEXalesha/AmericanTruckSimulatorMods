@@ -3,7 +3,7 @@
   "file": "alexey_hyper_power.scs",
   "display_name": "Hyper Power (Alexey)",
   "category": "physics",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "icon": {
     "title": "HYPER POWER",
     "subtitle": "x12 И 500+ КМ/Ч",
@@ -69,13 +69,6 @@
         "per_unit": "accessory_wheel_data",
         "absent_key": "grip_factor",
         "line": "grip_factor: 1.3\t# [mod alexey_hyper_power] tyre grip +30% (code default 1.0)"
-      }
-    ],
-    "def/game_data.sii": [
-      {
-        "key": "truck_speed_limit",
-        "value": "1000",
-        "note": "stock 104.607 km/h (65 mph): hard cap of every player truck, the game applies it even with the speed limiter option off"
       }
     ]
   }

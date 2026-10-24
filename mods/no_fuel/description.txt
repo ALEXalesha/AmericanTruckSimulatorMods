@@ -1,8 +1,8 @@
 БЕЗ РАСХОДА ТОПЛИВА (только одиночная игра)
 
-- Все 173 двигателя тратят 1/10000 топлива (consumption_coef 0.0001, не ноль - иначе приборка делит на ноль).
+- Все 177 двигателей тратят 1/10000 топлива (consumption_coef 0.0001, не ноль - иначе приборка делит на ноль).
 Порядок: ниже Hyper Power / Super Power (они уже несут эту правку).
 
 NO FUEL (single player only)
 
-- All 173 engines use 1/10000 of the fuel (consumption_coef 0.0001, not 0).
+- All 177 engines use 1/10000 of the fuel (consumption_coef 0.0001, not 0).

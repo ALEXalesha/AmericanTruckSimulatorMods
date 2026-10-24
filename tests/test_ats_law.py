@@ -2,7 +2,7 @@
 version and really changes (the "x10 really x10" law of the ETS2 project, per mod).
 
 The differences from ETS2 found on ATS 1.61.3.18 (16.10.2026) are pinned here too:
-no secondary_torque, no recharge_* and no ferries, 33 of 173 engines already have
+no secondary_torque, no recharge_* and no ferries, 33 of 177 engines already have
 consumption_coef, max_vehicle_count is set (not commented out), most tyres have no
 roll_resistance line. If an update changes one of them, a test here fails first.
 """
@@ -133,7 +133,7 @@ class AtsLawTest(unittest.TestCase):
     # ---- No Fuel
     def test_no_fuel_sets_or_adds_consumption_coef(self):
         engines = build_mods.expand_path(self.defs, ENGINES, "accessory_engine_data")
-        self.assertEqual(len(engines), 173)
+        self.assertEqual(len(engines), 177)   # 173 before the CityHash fix of 24.10
         had = 0
         for p in engines:
             stock, built = self.stock(p), self.built("no_fuel", p)
@@ -159,19 +159,22 @@ class AtsLawTest(unittest.TestCase):
         self.changed("super_power", "def/vehicle/physics.sii", "air_resistance", 1.5)
         self.changed("super_power", "def/vehicle/physics.sii", "brake_torque_factor", 2.0)
 
-    def test_power_mods_lift_the_65mph_cap(self):
-        """Алексей 24.10: Hyper/Super Power упирались в 104 км/ч. Это truck_speed_limit 104.607 (65 mph)
-        в def/game_data.sii - жёсткий потолок грузовика игрока, опция ограничителя его не снимает."""
-        self.assertAlmostEqual(one(self.stock("def/game_data.sii"), "truck_speed_limit"), 104.607, places=3)
+    def test_power_mods_do_not_ship_game_data(self):
+        """Алексей 24.10: def/game_data.sii из мода игра не применяет (проба: interior_sound_volume 1.0 - звук
+        не изменился; truck_speed_limit 250 и 1000 - тоже). Потолок 65 mph снимает опция «Ограничитель скорости»
+        (выкл), а 104 mph упиралось в обычную передачу 83 коробок, пропущенных из-за CityHash. Файл не кладём,
+        описание говорит про опцию."""
         for mod in ("hyper_power", "super_power"):
-            self.changed(mod, "def/game_data.sii", "truck_speed_limit", 1000)
-        # above the gear-limited top speed of Hyper Power (~640 km/h with the longest gearbox)
-        self.assertGreater(one(self.built("hyper_power", "def/game_data.sii"), "truck_speed_limit"), 700)
+            self.assertNotIn("def/game_data.sii", self.res[mod]["files"], mod)
+            with open(os.path.join(ROOT, "mods", mod, "description.txt"), encoding="utf-8") as f:
+                text = f.read()
+            self.assertIn("Speed limiter", text, mod)
+            self.assertNotIn("truck_speed_limit", text, mod)
 
     def test_hyper_power(self):
         self.check_torque("hyper_power", 12)
         trans = build_mods.expand_path(self.defs, TRANS, "accessory_transmission_data")
-        self.assertEqual(len(trans), 98)
+        self.assertEqual(len(trans), 181)     # 98 before the CityHash fix: 83 gearboxes kept stock gearing
         for p in trans:
             old = one(self.stock(p), "differential_ratio")
             self.assertAlmostEqual(one(self.built("hyper_power", p), "differential_ratio"), old * 0.35,
