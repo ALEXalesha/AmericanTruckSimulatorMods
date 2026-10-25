@@ -1,3 +1,5 @@
+<div align="center">
+
 # AmericanTruckSimulatorMods - моды OpenRoad для American Truck Simulator
 
 Десять модов для одиночной игры American Truck Simulator (версия 1.61) - те же, что [моды OpenRoad для ETS2](https://github.com/ALEXalesha/ETS2Mods), и инструменты, которые собирают их из файлов самой игры, плюс «Деньги ATS.bat» - поставить свою сумму денег в сохранении.
@@ -7,6 +9,8 @@
 [![Status](https://img.shields.io/badge/status-stable-brightgreen)](#) [![Release](https://img.shields.io/github/v/release/ALEXalesha/AmericanTruckSimulatorMods)](https://github.com/ALEXalesha/AmericanTruckSimulatorMods/releases/latest) [![CI](https://github.com/ALEXalesha/AmericanTruckSimulatorMods/actions/workflows/ci.yml/badge.svg)](https://github.com/ALEXalesha/AmericanTruckSimulatorMods/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![ATS](https://img.shields.io/badge/American_Truck_Simulator-mods-1B2838?logo=steam&logoColor=white)](https://store.steampowered.com/app/270880/) [![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![Built with Claude Code](https://img.shields.io/badge/Built_with-Claude_Code-D97757?logo=claude&logoColor=white)](https://claude.com/claude-code)
 
 Код, тесты и документация этого проекта написаны Claude (Anthropic) в Claude Code. Идеи, проверка и решения - Алексей.
+
+</div>
 
 > Проект не связан с SCS Software и не одобрен ею. «American Truck Simulator» - товарный знак SCS Software. Моды фанатские, только для одиночной игры; в TruckersMP и Конвое они не работают.
 
